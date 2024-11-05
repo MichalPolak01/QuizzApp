@@ -1,0 +1,25 @@
+# Ignoruj pliki i foldery generowane przez Node.js (dla Next.js frontend)
+quizz-app-frontend/node_modules/
+quizz-app-frontend/.next/
+quizz-app-frontend/out/
+quizz-app-frontend/.env.local
+quizz-app-frontend/.env.*.local
+
+# Ignoruj pliki i foldery generowane przez Django (dla Django backend)
+quizz-app-backend/__pycache__/
+quizz-app-backend/*.py[cod]
+quizz-app-backend/db.sqlite3
+quizz-app-backend/media/
+quizz-app-backend/staticfiles/
+quizz-app-backend/.env
+
+# Ignoruj systemowe pliki tymczasowe
+.DS_Store
+Thumbs.db
+
+# Ignoruj pliki konfiguracyjne IDE i edytorów (np. VS Code)
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
