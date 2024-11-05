@@ -69,6 +69,9 @@ CORS_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+AUTH_USER_MODEL = 'authentication.User'
+
+
 ROOT_URLCONF = "quizz_app.urls"
 
 TEMPLATES = [
