@@ -12,12 +12,17 @@ class RegisterSchema(Schema):
     @field_validator("password")
     def validate_password(cls, value):       
         return validate_password(value)
-    
-    
+
+
 class LoginSchema(Schema):
     email: EmailStr
     password: str
-    
+
+
+class UserUpdateSchema(Schema):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+
 
 class UserDetailSchema(Schema):
     id: int

@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from ninja_jwt.tokens import RefreshToken
 import traceback
 
-from .schemas import UserDetailSchema, RegisterSchema, LoginSchema
+from .schemas import UserDetailSchema, RegisterSchema, LoginSchema, UserUpdateSchema
 from quizz_app.schemas import MessageSchema
 from .models import User
 import helpers
@@ -52,11 +52,32 @@ def login(request, payload: LoginSchema):
         return 500, {"message": "An unexpected error occurred."}
     
 
-@router.get("/user", response={200: UserDetailSchema, 400: MessageSchema}, auth=helpers.auth_required)
+@router.get("/user", response={200: UserDetailSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def get_user(request):
     try:
         user = request.user
 
         return 200, user
     except Exception as e:
-        return 400, {"message": "An unexpected error occurred."}
+        return 500, {"message": "An unexpected error occurred."}
+    
+
+@router.patch("/user", response={200: UserDetailSchema, 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def update_user(request, payload: UserUpdateSchema):
+    try:
+        user = request.user
+
+        if payload.email and User.objects.filter(email=payload.email).exclude(id=user.id).exists():
+            return 400, {"message": "Email is already taken."}
+        
+        if payload.username and User.objects.filter(username=payload.username).exclude(id=user.id).exists():
+            return 400, {"message": "Username is already taken."}
+
+        for attr, value in payload.dict(exclude_unset=True).items():
+            setattr(user, attr, value)
+
+        user.save()
+
+        return 200, user
+    except Exception as e:
+        return 500, {"message": "An unexpected error occurred."}
