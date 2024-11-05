@@ -13,6 +13,11 @@ class RegisterSchema(Schema):
     def validate_password(cls, value):       
         return validate_password(value)
     
+    
+class LoginSchema(Schema):
+    email: EmailStr
+    password: str
+    
 
 class UserDetailSchema(Schema):
     id: int
