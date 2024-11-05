@@ -2,10 +2,12 @@ from ninja_extra import Router
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import authenticate
 from ninja_jwt.tokens import RefreshToken
+import traceback
 
 from .schemas import UserDetailSchema, RegisterSchema, LoginSchema
 from quizz_app.schemas import MessageSchema
 from .models import User
+import helpers
 
 router = Router()
 
@@ -37,6 +39,7 @@ def login(request, payload: LoginSchema):
         if user is None:
             return 401, {"message": "Invalid email or password"}
 
+        user.update_last_login()
         refresh = RefreshToken.for_user(user)
         
         return 200, {
@@ -45,4 +48,15 @@ def login(request, payload: LoginSchema):
             "username": user.username,
         }
     except Exception as e:
+        traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
+    
+
+@router.get("/user", response={200: UserDetailSchema, 400: MessageSchema}, auth=helpers.auth_required)
+def get_user(request):
+    try:
+        user = request.user
+
+        return 200, user
+    except Exception as e:
+        return 400, {"message": "An unexpected error occurred."}
