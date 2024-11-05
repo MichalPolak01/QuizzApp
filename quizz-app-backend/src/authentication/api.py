@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from ninja_jwt.tokens import RefreshToken
 import traceback
 
-from .schemas import UserDetailSchema, RegisterSchema, LoginSchema, UserUpdateSchema
+from .schemas import UserDetailSchema, RegisterSchema, LoginSchema, UserUpdateSchema, ChangePasswordSchema
 from quizz_app.schemas import MessageSchema
 from .models import User
 import helpers
@@ -19,9 +19,13 @@ def register(request, payload: RegisterSchema):
         
         if User.objects.filter(username=payload.username).exists():
             return 400, {"message": "Username is already registered."}
+    
+        if payload.password != payload.confirm_password:
+            return 400, {"message": "Passwords do not match."}
 
         user_data = payload.dict()
 
+        user_data.pop("confirm_password", None)
         user_data['password'] = make_password(user_data['password'])
 
         user = User.objects.create(**user_data)
@@ -79,5 +83,23 @@ def update_user(request, payload: UserUpdateSchema):
         user.save()
 
         return 200, user
+    except Exception as e:
+        return 500, {"message": "An unexpected error occurred."}
+    
+
+@router.post("/change-password", response={200: MessageSchema, 400: MessageSchema}, auth=helpers.auth_required)
+def change_password(request, payload: ChangePasswordSchema):
+    try:
+        user = request.user
+        if not check_password(payload.old_password, user.password):
+            return 400, {"message": "Old password incorrect."}
+        
+        if payload.new_password != payload.confirm_password:
+            return 400, {"message": "New passwords do not match."}
+        
+        user.password = make_password(payload.new_password)
+        user.save()
+
+        return 200, {"message": "Password changed successfully."}
     except Exception as e:
         return 500, {"message": "An unexpected error occurred."}

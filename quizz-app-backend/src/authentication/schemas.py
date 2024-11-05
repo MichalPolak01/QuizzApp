@@ -8,6 +8,7 @@ class RegisterSchema(Schema):
     username: str = Field(min_length=3, max_length=64)
     email: EmailStr
     password: str = Field(min_length=8)
+    confirm_password: str
 
     @field_validator("password")
     def validate_password(cls, value):       
@@ -28,6 +29,16 @@ class UserDetailSchema(Schema):
     id: int
     username: str
     email: EmailStr
+
+
+class ChangePasswordSchema(Schema):
+    old_password: str
+    new_password: str
+    confirm_password: str
+
+    @field_validator("new_password")
+    def validate_new_password(cls, value):
+        return validate_password(value)
 
 
 # Validators
