@@ -78,31 +78,18 @@ export default function Page() {
     }
 
     const showToast = async (isError: boolean) => {
-        if (isError) {
-            toast('Login failed. Please try again later!',
-                {
-                  icon: '☹️',
-                  style: {
-                    borderRadius: '16px',
-                    padding: '16px',
-                    background: "#F31260",
-                    color: '#fff',
-                  },
-                }
-              );
-        } else {
-            toast('Logged in successfully. Welcome!',
-                {
-                  icon: '👏',
-                  style: {
-                    borderRadius: '16px',
-                    padding: '16px',
-                    background: "#006FEE",
-                    color: '#fff',
-                  },
-                }
-            )
-        }
+        toast(isError? 'Login failed. Please try again later!': 'Logged in successfully. Welcome!',
+            {
+                icon: isError? '☹️' : '👏',
+                style: {
+                borderRadius: '16px',
+                textAlign: "center",
+                padding: '16px',
+                background: isError? "#F31260" : "#006FEE",
+                color: '#fff',
+                },
+            }
+        );
     }
 
     const isInvalidEmail = React.useMemo(() => {

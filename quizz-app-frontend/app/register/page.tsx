@@ -7,9 +7,9 @@ import { Input } from "@nextui-org/input";
 import { Link } from "@nextui-org/link";
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import { validateEmail, validatePassword } from "@/lib/formValidators";
-import { useAuth } from "@/providers/authProvider";
 
 
 const REGISTER_URL = "api/register"
@@ -24,12 +24,11 @@ export default function Page() {
         username: "",
         email: "",
         password: "",
-        confirmPassword: ""
+        confirm_password: ""
     });
     const [isUsernameInvalid, setIsUsernameInvalid] = useState(false);
     const [isEmailInvalid, setIsEmailInvalid] = useState(false);
 
-    const auth = useAuth();
     const router = useRouter();
     const toggleVisibilityPassword = () => setIsPasswordVisible(!isPasswordVisible);
     const toggleVisibilityConfirmPassword = () => setIsConfirmPasswordVisible(!isConfirmPasswordVisible);
@@ -39,12 +38,14 @@ export default function Page() {
         setIsUsernameInvalid(false);
         setIsEmailInvalid(false);
 
-        if (formData.username == "" || isInvalidEmail || isInvalidPassword || formData.confirmPassword == "") {
+        if (formData.username == "" || isInvalidEmail || isInvalidPassword || formData.confirm_password == "") {
             setRegisterError(true);
             setRegisterMessage("Aby założyć konto musisz wprowadzić poprawnie wszystkie dane!");
+            showToast(true);
         } else if (isInvalidConfirmPassword) {
             setRegisterError(true);
             setRegisterMessage("Podane hasła różnią się od siebie!");
+            showToast(true);
         } else {
             const requestOptions = {
                 method: "POST",
@@ -63,13 +64,12 @@ export default function Page() {
     
             try {
                 data = await response.json();
-            } catch (error) { }
+            } catch { }
     
             if (response.status == 201) {
                 setRegisterError(false);
-                // TODO Add toast
-                console.log("Register success");
                 router.push(LOGIN_URL);
+                showToast(false);
             } else if (response.status == 400) {
                 setRegisterError(true);
                 const errorResponse = data?.message;
@@ -83,18 +83,30 @@ export default function Page() {
                 } else {
                     setRegisterMessage("Podczas tworzenia konta wystąpił nieoczekiwany błąd. Spróbuj ponownie później.");
                 }
-                
-                // TODO Add toast
-                console.log("Account update failed");
-            } else if (response.status == 401) {
-                auth.loginRequired();
+                showToast(true);
             } else {
                 setRegisterError(true);
                 setRegisterMessage("Podczas logowania wystąpił nieoczekiwany błąd servera. Spróbuj ponownie później.");
-                console.log("Register failed");
+                showToast(true);
             }
         }
     }
+
+    const showToast = async (isError: boolean) => {
+        toast(isError? 'Registration failed. Check your information and try again!': 'Registration has been successful. Welcome!',
+            {
+                icon: isError? '☹️' : '👏',
+                style: {
+                borderRadius: '16px',
+                textAlign: "center",
+                padding: '16px',
+                background: isError? "#F31260" : "#006FEE",
+                color: '#fff',
+                },
+            }
+        );
+    }
+
 
     const isInvalidEmail = React.useMemo(() => {
       if (formData.email === "") return false;
@@ -109,10 +121,10 @@ export default function Page() {
     }, [formData.password]);
 
     const isInvalidConfirmPassword = React.useMemo(() => {
-        if (formData.confirmPassword === "") return false;
+        if (formData.confirm_password === "") return false;
     
-        return formData.password == formData.confirmPassword ? false : true;
-    }, [formData.confirmPassword]);
+        return formData.password == formData.confirm_password ? false : true;
+    }, [formData.confirm_password]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setIsUsernameInvalid(false);
@@ -208,14 +220,14 @@ export default function Page() {
                     isRequired={true}
                     label="Potwierdź Hasło"
                     labelPlacement="outside"
-                    name="confirmPassword"
+                    name="confirm_password"
                     placeholder="Potwierdź hasło"
                     size="lg"
                     startContent={
                         <LockKeyhole className={`text-2xl  pointer-events-none flex-shrink-0 ${isInvalidConfirmPassword? "text-danger-400" :"text-default-400"}`}/>
                     }
                     type={isConfirmPasswordVisible ? "text" : "password"}
-                    value={formData.confirmPassword}
+                    value={formData.confirm_password}
                     onChange={handleChange}
                 />
                 </CardBody>
