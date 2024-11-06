@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import { AuthProvider } from "@/providers/authProvider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: {
@@ -47,6 +48,10 @@ export default function RootLayout({
                 <Navbar />
                 <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
                   {children}
+                  <Toaster
+                    position="bottom-right"
+                    reverseOrder={false}
+                  />
                 </main>
                 {/* <footer className="w-full flex items-center justify-center py-3">
                   <Link

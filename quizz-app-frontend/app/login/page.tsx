@@ -6,8 +6,10 @@ import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
 import { Input } from "@nextui-org/input";
 import { Link } from "@nextui-org/link";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { useAuth } from "@/providers/authProvider";
+import { validateEmail } from "@/lib/formValidators";
 
 
 const LOGIN_URL = "api/login"
@@ -30,6 +32,11 @@ export default function Page() {
         if (formData.email == "" || formData.password == "") {
             setLoginError(true);
             setLoginMessage("Aby się zalogować musisz podać poprawny adres email oraz hasło.");
+            showToast(true);
+        } else if (isInvalidEmail) {
+            setLoginError(true);
+            setLoginMessage("Podany adres email ma niepoprawny format.");
+            showToast(true);
         } else {
             const requestOptions = {
                 method: "POST",
@@ -52,26 +59,57 @@ export default function Page() {
 
             try {
                 data = await response.json();
-            } catch (error) { }
+            } catch { }
 
             if (response.status == 200) {
                 auth.login(data.username, data.role, data.access, data.refresh);
                 setLoginError(false);
-                // TODO Add toast
-                console.log("Login success");
+                showToast(false);
             } else if (response.status == 400 || response.status == 401) {
                 setLoginError(true);
                 setLoginMessage("Podany adres email lub hasło są niepoprawne. Sprawdź poprawność wprowadzoanych danych i spróbuj ponownie.");
-                // setLoginError(true);
-                // TODO Add toast
-                console.log("Login failed");
+                showToast(true);
             } else {
                 setLoginError(true);
                 setLoginMessage("Podczas logowania wystąpił nieoczekiwany błąd servera. Spróbuj ponownie później.");
-                console.log("Login failed");
+                showToast(true);
             }
         }
     }
+
+    const showToast = async (isError: boolean) => {
+        if (isError) {
+            toast('Login failed. Please try again later!',
+                {
+                  icon: '☹️',
+                  style: {
+                    borderRadius: '16px',
+                    padding: '16px',
+                    background: "#F31260",
+                    color: '#fff',
+                  },
+                }
+              );
+        } else {
+            toast('Logged in successfully. Welcome!',
+                {
+                  icon: '👏',
+                  style: {
+                    borderRadius: '16px',
+                    padding: '16px',
+                    background: "#006FEE",
+                    color: '#fff',
+                  },
+                }
+            )
+        }
+    }
+
+    const isInvalidEmail = React.useMemo(() => {
+        if (formData.email === "") return false;
+    
+        return validateEmail(formData.email) ? false : true;
+      }, [formData.email]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
