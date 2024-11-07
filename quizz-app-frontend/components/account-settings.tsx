@@ -2,15 +2,15 @@
 
 import React, { FormEvent, useEffect, useState } from "react";
 import { Button } from "@nextui-org/button";
-import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/card";
 import { Input } from "@nextui-org/input";
 import {  Mail, UserRound } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { validateEmail } from "@/lib/formValidators";
 import { useAuth } from "@/providers/authProvider";
 
+const ACCOUNT_SETTINGS_URL = "api/profile/account-settings";
 
-const ACCOUNT_SETTINGS_URL = "api/account-settings";
 
 export default function AccountSettings() {
     const [registerMessage, setRegisterMessage] = useState("Aby zaktualizować profil wprowadź wszystkie potrzebne dane i zapisz zminy.");
@@ -20,7 +20,6 @@ export default function AccountSettings() {
     const [formData, setFormData] = useState({
         username: "",
         email: "",
-        role: ""
     });
 
     const auth = useAuth();
@@ -34,23 +33,17 @@ export default function AccountSettings() {
                 }
             })
             
-            if (response.status == 401) {
-                auth.loginRequired();
-            } else {
-                if (response.ok) {
-                    const data = await response.json();
+            if (response.ok) {
+                const data = await response.json();
 
-                    setFormData({
-                        username: data.username || "",
-                        email: data.email || "",
-                        role: data.role || ""
-                    })
-                } else {
-                    console.error("Error featching data");
-                }
+                setFormData({
+                    username: data.username || "",
+                    email: data.email || "",
+                })
+            } else if (response.status == 401) {
+                auth.loginRequired();
             }
         }
-
         
         fetchUserData();
     }, []);
@@ -81,14 +74,12 @@ export default function AccountSettings() {
     
             try {
                 data = await response.json();
-            } catch (error) { }
+            } catch { }
     
             if (response.status == 200) {
                 setRegisterError(2);
-                // TODO Add toast
                 setRegisterMessage("Dane użytkownika zostały pomyślnie zaktualizowane.");
-                console.log("Account update success");
-                // router.push(LOGIN_URL);
+                showToast(false);
             } else if (response.status == 400) {
                 setRegisterError(1);
                 const errorResponse = data?.message;
@@ -103,16 +94,31 @@ export default function AccountSettings() {
                     setRegisterMessage("Podczas aktualizacji danych użytkownika wystąpił nieoczekiwany błąd. Spróbuj ponownie później.");
                 }
                 
-                // TODO Add toast
-                console.log("Account update failed");
+                showToast(true);
             } else if (response.status == 401) {
                 auth.loginRequired();
+                showToast(true);
             } else {
                 setRegisterError(1);
                 setRegisterMessage("Podczas aktualizacji danych użytkownika wystąpił nieoczekiwany błąd servera. Spróbuj ponownie później.");
-                console.log("Account update failed");
+                showToast(false);
             }
         }
+    }
+
+    const showToast = async (isError: boolean) => {
+        toast(isError? 'Wystąpił błąd podczas aktualizacji danych!': 'Aktualizacja danych zakończona sukcesem!',
+            {
+                icon: isError? '☹️' : '🙂',
+                style: {
+                borderRadius: '16px',
+                textAlign: "center",
+                padding: '16px',
+                background: isError? "#F31260" : "#006FEE",
+                color: '#fff',
+                },
+            }
+        );
     }
 
     const isInvalidEmail = React.useMemo(() => {
