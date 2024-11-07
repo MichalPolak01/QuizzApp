@@ -93,7 +93,7 @@ export default function Page() {
     }
 
     const showToast = async (isError: boolean) => {
-        toast(isError? 'Registration failed. Check your information and try again!': 'Registration has been successful. Welcome!',
+        toast(isError? 'Podczas rejestracji wystąpił błąd. Sprawdź wprowadzone dane i spróbuj ponownie!': 'Rejestracja powiodła się. Witamy!',
             {
                 icon: isError? '☹️' : '👏',
                 style: {

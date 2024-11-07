@@ -4,11 +4,13 @@ import React, { FormEvent, useState } from "react";
 import { Button } from "@nextui-org/button";
 import { Input } from "@nextui-org/input";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { validatePassword } from "@/lib/formValidators";
+import { useAuth } from "@/providers/authProvider";
 
 
-const CHANGE_PASSWORD_URL = "api/change-password"
+const CHANGE_PASSWORD_URL = "api/profile/change-password"
 
 export default function ChangePassword() {
     const [isOldPasswordVisible, setIsOldPasswordVisible] = React.useState(false);
@@ -24,6 +26,7 @@ export default function ChangePassword() {
         new_password: "",
         confirm_password: ""
     });
+    const auth = useAuth();
 
     const toggleVisibilityOldPassword = () => setIsOldPasswordVisible(!isOldPasswordVisible);
     const toggleVisibilityNewPassword = () => setIsNewPasswordVisible(!isNewPasswordVisible);
@@ -58,13 +61,12 @@ export default function ChangePassword() {
     
             try {
                 data = await response.json();
-            } catch (error) { }
+            } catch { }
     
             if (response.status == 200) {
                 setPasswordChangeError(2);
                 setPasswordChangeMessage("Hasło zostało zmienione.");
-                // TODO Add toast
-                console.log("Password change success");
+                showToast(false);
             } else if (response.status == 400) {
                 setPasswordChangeError(1);
                 const errorResponse = data?.message;
@@ -79,14 +81,31 @@ export default function ChangePassword() {
                     setPasswordChangeMessage("Podczas zmiany hasła wystąpił nieoczekiwany błąd. Spróbuj ponownie później.");
                 }
                 
-                // TODO Add toast
-                console.log("Password change failed");
+                showToast(true);
+            } else if (response.status == 401) {
+                auth.loginRequired();
+                showToast(true);
             } else {
                 setPasswordChangeError(1)
                 setPasswordChangeMessage("Podczas zmiany hasła wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.");
-                console.log("Password change failed");
+                showToast(true);
             }
         }
+    }
+
+    const showToast = async (isError: boolean) => {
+        toast(isError? 'Wystąpił błąd podczas zmiany hasła!': 'Aktualizacja hasła zakończona sukcesem!',
+            {
+                icon: isError? '☹️' : '🔐',
+                style: {
+                borderRadius: '16px',
+                textAlign: "center",
+                padding: '16px',
+                background: isError? "#F31260" : "#006FEE",
+                color: '#fff',
+                },
+            }
+        );
     }
 
     const isInvalidPassword = React.useMemo(() => {

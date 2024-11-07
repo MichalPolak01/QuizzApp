@@ -78,7 +78,7 @@ export default function Page() {
     }
 
     const showToast = async (isError: boolean) => {
-        toast(isError? 'Login failed. Please try again later!': 'Logged in successfully. Welcome!',
+        toast(isError? 'Podczas logowania wystąpił błąd. Spróbuj ponownie później!': 'Pomyślnie zalogowano. Witamy!',
             {
                 icon: isError? '☹️' : '👏',
                 style: {
