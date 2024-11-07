@@ -5,6 +5,7 @@ import { Tab, Tabs } from "@nextui-org/tabs";
 import React, { Key, useState } from "react";
 
 import AccountSettings from "@/components/account-settings";
+import ChangePassword from "@/components/change-password";
 
 export default function Page() {
     const [selected, setSelected] = useState("account-settings");
@@ -32,7 +33,7 @@ export default function Page() {
                 <AccountSettings />
               </Tab>
               <Tab key="change-password" title="Zmień hasło">
-
+                <ChangePassword />
               </Tab>
             </Tabs>
           </CardBody>
