@@ -1,14 +1,16 @@
 from ninja_extra import Router
 
+from quizz_app.schemas import MessageSchema
+
 from .models import Quiz, Question, Options
-from .schemas import QuizDetailSchema
+from .schemas import QuizDetailSchema, QuizDetailResponseSchema
 
 import helpers
 
 router = Router()
 
 
-@router.post('', response={201: QuizDetailSchema}, auth=helpers.auth_required)
+@router.post('', response={201: QuizDetailResponseSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def create_quiz(request, payload: QuizDetailSchema):
     try:
         quiz = Quiz.objects.create(
@@ -25,3 +27,9 @@ def create_quiz(request, payload: QuizDetailSchema):
         return 201, quiz
     except Exception as e:
         return 500, {"message": "An unexpected error occurred."}
+
+
+@router.get('/{quiz_id}', response={200: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema} )
+def get_quiz_detail(request, quiz_id: int):
+    quiz = Quiz.objects.get(id=quiz_id, is_removed=False)
+    return quiz
