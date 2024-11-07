@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     
     # Apps
     "authentication",
+    "quiz"
 ]
 
 MIDDLEWARE = [
