@@ -1,6 +1,6 @@
 from django.db import models
 from authentication.models import User
-from django.db.models import Avg, Count
+from django.db.models import Avg
 
 
 class Quiz(models.Model):

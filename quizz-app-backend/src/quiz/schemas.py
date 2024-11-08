@@ -33,9 +33,12 @@ class QuizDetailSchema(QuizSchema):
 class QuizDetailResponseSchema(QuizResponseSchema):
     questions: List[QuestionSchema]
 
-
 class UserStatsSchema(Schema):
-    quiz_score: float
+    user: UserDetailSchema
+    quiz: QuizResponseSchema
+
+class UserStatsRespinseSchema(Schema):
+    user_stats: UserStatsSchema
     percentile: float
 
 class QuizSubmitSchema(Schema):

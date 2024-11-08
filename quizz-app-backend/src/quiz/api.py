@@ -1,10 +1,11 @@
 import traceback
 from ninja_extra import Router
+from django.db.models import Avg
 
 from quizz_app.schemas import MessageSchema
 
-from .models import Quiz, Question, Options
-from .schemas import QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema
+from .models import Quiz, Question, Options, UserStats
+from .schemas import QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema, QuizSubmitSchema, UserStatsRespinseSchema
 
 from authentication.models import User
 
@@ -72,6 +73,37 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
                 Options.objects.create(question=question, name=option_data.name, is_correct=option_data.is_correct)
 
         return 200, quiz
+    except User.DoesNotExist:
+        return 404, {"message": f"User not found."}
+    except Quiz.DoesNotExist:
+        return 404, {"message": f"Quiz with id {quiz_id} not found."}
+    except Exception as e:
+        traceback.print_exc()
+        return 500, {"message": "An unexpected error occurred."}
+    
+
+@router.post('/{quiz_id}/submit', response={200: UserStatsRespinseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
+    try:
+        quiz = Quiz.objects.get(id=quiz_id)
+
+        user_stats = UserStats.objects.create(
+            user=request.user,
+            quiz=quiz,
+            quiz_score=payload.quiz_score
+        )
+
+        quiz.user_count = UserStats.objects.filter(quiz=quiz).count()
+        quiz.average_score = UserStats.objects.filter(quiz=quiz).aggregate(Avg("quiz_score"))['quiz_score__avg'] or 0
+
+
+        user_rank = UserStats.objects.filter(quiz=quiz, quiz_score__gt=payload.quiz_score).count()
+        total_users = quiz.user_count
+        percentile = (1 - user_rank / total_users) * 100 if total_users > 0 else 0
+
+        return 200, {"user_stats": user_stats, "percentile": round(percentile, 2)}
+    except User.DoesNotExist:
+        return 404, {"message": f"User not found."}
     except Quiz.DoesNotExist:
         return 404, {"message": f"Quiz with id {quiz_id} not found."}
     except Exception as e:
