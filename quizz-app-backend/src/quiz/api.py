@@ -75,7 +75,36 @@ def get_quizzes(request):
         return 404, {"message": f"Quizes not found."}
     except Exception as e:
         return 500, {"message": "An unexpected error occurred."}
-       
+    
+
+@router.get('/{option}', response={200: List[QuizResponseSchema], 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def get_quizzes(request, option: str):
+    try:
+        if option == "my":
+            user = request.user
+            quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')
+
+        elif option == "latest":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')[:10]
+
+        elif option == "highest-rated":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')[:10]
+
+        elif option == "most-popular":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')[:10]
+
+        else:
+            return 400, {"message": "Invalid option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
+
+        return 200, quizzes
+    except User.DoesNotExist:
+        return 404, {"message": f"User not found."}
+    except Quiz.DoesNotExist:
+        return 404, {"message": f"Quizes not found."}
+    except Exception as e:
+        traceback.print_exc()
+        return 500, {"message": "An unexpected error occurred."}
+    
 
 @router.get('/{quiz_id}', response={200: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required )
 def get_quiz_detail(request, quiz_id: int):
@@ -121,7 +150,8 @@ def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
         user_stats = UserStats.objects.create(
             user=request.user,
             quiz=quiz,
-            quiz_score=payload.quiz_score
+            quiz_score=payload.quiz_score,
+            rating=payload.rating
         )
 
         quiz.user_count = UserStats.objects.filter(quiz=quiz).count()
