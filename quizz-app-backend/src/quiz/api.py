@@ -1,20 +1,23 @@
+import json
 import traceback
 from ninja_extra import Router
 from django.db.models import Avg
-
-from quizz_app.schemas import MessageSchema
-
-from .models import Quiz, Question, Options, UserStats
-from .schemas import QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema, QuizSubmitSchema, UserStatsRespinseSchema
+from openai import OpenAI
+from decouple import config
+from typing import List
+import helpers
 
 from authentication.models import User
+from .models import Quiz, Question, Option, UserStats
 
-import helpers
+from quizz_app.schemas import MessageSchema
+from .schemas import QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema, QuizSubmitSchema, UserStatsResponseSchema, QuizSchema
+
 
 router = Router()
 
 
-@router.post('', response={201: QuizDetailResponseSchema, 500: MessageSchema}, auth=helpers.auth_required)
+@router.post('', response={201: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def create_quiz(request, payload: QuizDetailSchema):
     try:
         quiz = Quiz.objects.create(
@@ -26,7 +29,7 @@ def create_quiz(request, payload: QuizDetailSchema):
         for question_data in payload.questions:
             question = Question.objects.create(quiz=quiz, name=question_data.name)
             for option_data in question_data.options:
-                Options.objects.create(question=question, name=option_data.name, is_correct=option_data.is_correct)
+                Option.objects.create(question=question, name=option_data.name, is_correct=option_data.is_correct)
 
         return 201, quiz
     except User.DoesNotExist:
@@ -35,14 +38,31 @@ def create_quiz(request, payload: QuizDetailSchema):
         return 500, {"message": "An unexpected error occurred."}
 
 
-@router.get('/{quiz_id}', response={200: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required )
-def get_quiz_detail(request, quiz_id: int):
+@router.post('/generate', response={201: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def create_quiz(request, payload: QuizSchema):
     try:
-        quiz = Quiz.objects.get(id=quiz_id, is_removed=False)
-        return quiz
-    except Quiz.DoesNotExist:
-        return 404, {"message": f"Quiz with id {quiz_id} not found."}
+        quiz = Quiz.objects.create(
+            name=payload.name,
+            description=payload.description,
+            created_by=request.user
+        )
+
+        generated_quiz = generate_quiz(lesson_name=payload.name, lesson_description=payload.description, language="polish")
+
+        for question_data in generated_quiz["questions"]:
+            question = Question.objects.create(quiz=quiz, name=question_data["question"])
+            for option_data in question_data["options"]:
+                Option.objects.create(
+                    question=question, 
+                    name=option_data["option"], 
+                    is_correct=option_data["is_correct"]
+                )
+
+        return 201, quiz
+    except User.DoesNotExist:
+        return 404, {"message": f"User not found."}
     except Exception as e:
+        traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
 
 
@@ -55,6 +75,17 @@ def get_quizzes(request):
         return 404, {"message": f"Quizes not found."}
     except Exception as e:
         return 500, {"message": "An unexpected error occurred."}
+       
+
+@router.get('/{quiz_id}', response={200: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required )
+def get_quiz_detail(request, quiz_id: int):
+    try:
+        quiz = Quiz.objects.get(id=quiz_id, is_removed=False)
+        return quiz
+    except Quiz.DoesNotExist:
+        return 404, {"message": f"Quiz with id {quiz_id} not found."}
+    except Exception as e:
+        return 500, {"message": "An unexpected error occurred."}    
     
 
 @router.put('/{quiz_id}', response={200: QuizDetailResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
@@ -70,7 +101,7 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
         for question_data in payload.questions:
             question = Question.objects.create(quiz=quiz, name=question_data.name)
             for option_data in question_data.options:
-                Options.objects.create(question=question, name=option_data.name, is_correct=option_data.is_correct)
+                Option.objects.create(question=question, name=option_data.name, is_correct=option_data.is_correct)
 
         return 200, quiz
     except User.DoesNotExist:
@@ -82,7 +113,7 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
         return 500, {"message": "An unexpected error occurred."}
     
 
-@router.post('/{quiz_id}/submit', response={200: UserStatsRespinseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+@router.post('/{quiz_id}/submit', response={200: UserStatsResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
     try:
         quiz = Quiz.objects.get(id=quiz_id)
@@ -109,3 +140,57 @@ def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
     except Exception as e:
         traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
+
+
+def generate_quiz(lesson_name: str, lesson_description: str, language: str = "polish") -> dict:
+    try:
+        client = OpenAI(api_key=config('OPENAI_API_KEY', cast=str))
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        f"You are a quiz generator. Respond in JSON format with a single key 'questions', containing a list of questions. "
+                        f"Each question should have the keys 'question' (the main quiz question) and 'options' (a list of answer options). "
+                        f"Each item in 'options' should be an object with 'option' (text of the answer) and 'is_correct' (boolean indicating if this option is correct). "
+                        f"Use {language} for all content."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Generate a multiple-choice quiz for a lesson titled '{lesson_name}' described as '{lesson_description}'. "
+                        "The quiz should include 1 to 3 multiple-choice questions, each with four answer options. "
+                        "The response should be a JSON object with the following structure:\n"
+                        "{"
+                        "  'questions': ["
+                        "    {"
+                        "      'question': 'The main quiz question as a string.',"
+                        "      'options': ["
+                        "        {'option': 'Answer text 1', 'is_correct': true or false},"
+                        "        {'option': 'Answer text 2', 'is_correct': true or false},"
+                        "        {'option': 'Answer text 3', 'is_correct': true or false},"
+                        "        {'option': 'Answer text 4', 'is_correct': true or false}"
+                        "      ]"
+                        "    }"
+                        "  ]"
+                        "}"
+                        "Ensure the JSON structure is valid, adheres to this format exactly, and contains no additional text or explanations. "
+                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question."
+                    )
+                }
+            ]
+        )
+        
+        result = response.choices[0].message.content
+        
+        try:
+            parsed_result = json.loads(result)
+            return parsed_result
+        except json.JSONDecodeError as e:
+            return [{"error": "Model did not return valid JSON format", "response": result}]
+    except Exception as e:
+        raise
+
+

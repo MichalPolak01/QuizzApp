@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from ninja import Schema
 from typing import List, Optional
 
@@ -17,13 +17,15 @@ class QuizSchema(Schema):
     description: str
     user_count: Optional[int] = 0
     average_score: Optional[float] = 0.0
+    average_rating: Optional[float] = 0.0
 
 class QuizResponseSchema(Schema):
     id: int
     name: str
     description: str
-    user_count: int = 0
-    average_score: float = 0.0
+    user_count: int
+    average_score: float
+    average_rating: float
     created_by: UserDetailSchema
     last_updated: datetime
 
@@ -36,10 +38,13 @@ class QuizDetailResponseSchema(QuizResponseSchema):
 class UserStatsSchema(Schema):
     user: UserDetailSchema
     quiz: QuizResponseSchema
+    rating: float
 
-class UserStatsRespinseSchema(Schema):
+class UserStatsResponseSchema(Schema):
     user_stats: UserStatsSchema
     percentile: float
+    rating: Optional[float] = 2.5
 
 class QuizSubmitSchema(Schema):
     quiz_score: float
+    rating: Optional[float] = 2.5
