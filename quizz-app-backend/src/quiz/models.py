@@ -6,8 +6,22 @@ from django.dispatch import receiver
 
 
 class Quiz(models.Model):
+    CATEGORY_CHOICES = [
+        ("programming", "Języki Programowania"),
+        ("math", "Matematyka"),
+        ("history", "Historia"),
+        ("science", "Nauki Przyrodnicze"),
+        ("geography", "Geografia"),
+        ("art", "Sztuka"),
+        ("language", "Kultura i Język"),
+        ("business", "Biznes i Ekonomia"),
+        ("technology", "Technologia"),
+        ("other", "Inna")
+    ]
+
     name = models.CharField(max_length=255)
     description = models.TextField()
+    category = models.CharField(max_length=32, choices=CATEGORY_CHOICES, default="other")
     user_count = models.PositiveBigIntegerField(default=0)
     average_score = models.FloatField(default=0.0)
     average_rating = models.FloatField(default=0.0)

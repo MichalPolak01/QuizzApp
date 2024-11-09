@@ -23,6 +23,7 @@ def create_quiz(request, payload: QuizDetailSchema):
         quiz = Quiz.objects.create(
             name=payload.name,
             description=payload.description,
+            category=payload.category,
             created_by=request.user
         )
 
@@ -35,6 +36,7 @@ def create_quiz(request, payload: QuizDetailSchema):
     except User.DoesNotExist:
         return 404, {"message": f"User not found."}
     except Exception as e:
+        traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
 
 
@@ -44,6 +46,7 @@ def create_quiz(request, payload: QuizSchema):
         quiz = Quiz.objects.create(
             name=payload.name,
             description=payload.description,
+            category=payload.category,
             created_by=request.user
         )
 
@@ -77,7 +80,7 @@ def get_quizzes(request):
         return 500, {"message": "An unexpected error occurred."}
     
 
-@router.get('/{option}', response={200: List[QuizResponseSchema], 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+@router.get('/filter/{option}', response={200: List[QuizResponseSchema], 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def get_quizzes(request, option: str):
     try:
         if option == "my":
@@ -147,18 +150,26 @@ def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
     try:
         quiz = Quiz.objects.get(id=quiz_id)
 
-        user_stats = UserStats.objects.create(
+        user_stats, created = UserStats.objects.get_or_create(
             user=request.user,
             quiz=quiz,
-            quiz_score=payload.quiz_score,
-            rating=payload.rating
+            defaults={"quiz_score": payload.quiz_score, "rating": payload.rating}
         )
 
-        quiz.user_count = UserStats.objects.filter(quiz=quiz).count()
-        quiz.average_score = UserStats.objects.filter(quiz=quiz).aggregate(Avg("quiz_score"))['quiz_score__avg'] or 0
+        if not created:
+            if payload.quiz_score > user_stats.quiz_score:
+                user_stats.quiz_score = payload.quiz_score
+            user_stats.rating = payload.rating
+            user_stats.save()
+        else:
+            user_stats.quiz_score = payload.quiz_score
+            user_stats.rating = payload.rating
+            user_stats.save()
 
+        Quiz.update_quiz_statistics(quiz.id)
+        quiz.refresh_from_db()
 
-        user_rank = UserStats.objects.filter(quiz=quiz, quiz_score__gt=payload.quiz_score).count()
+        user_rank = UserStats.objects.filter(quiz=quiz, quiz_score__gt=user_stats.quiz_score).count()
         total_users = quiz.user_count
         percentile = (1 - user_rank / total_users) * 100 if total_users > 0 else 0
 
