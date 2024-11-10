@@ -85,16 +85,16 @@ def get_quizzes(request, option: str):
     try:
         if option == "my":
             user = request.user
-            quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')
+            quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')[:3]
 
         elif option == "latest":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')[:10]
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')[:3]
 
         elif option == "highest-rated":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')[:10]
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')[:3]
 
         elif option == "most-popular":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')[:10]
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')[:3]
 
         else:
             return 400, {"message": "Invalid option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
