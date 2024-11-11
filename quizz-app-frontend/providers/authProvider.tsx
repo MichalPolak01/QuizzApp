@@ -16,7 +16,7 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps | null>(null)
 
-const LOGIN_REDIRECT_URL = "/"
+const LOGIN_REDIRECT_URL = "/home"
 const LOGOUT_REDIRECT_URL = "/login"
 const LOGIN_REQUIRED_URL = "/login"
 
@@ -39,8 +39,9 @@ export function AuthProvider({children}: AuthProviderProps) {
     const searchParams = useSearchParams();
 
     useEffect(() => {
+        
         const checkToken = async () => {
-            const token = await getToken();
+            const token = localStorage.getItem(LOCAL_STORAGE_KEY);
 
             if (token) {
                 setIsAuthenticated(true);

@@ -7,7 +7,7 @@ import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import { Navbar } from "@/components/navbar";
+import {Navbar} from "@/components/navbar";
 import { AuthProvider } from "@/providers/authProvider";
 import { Link } from "@nextui-org/link";
 
