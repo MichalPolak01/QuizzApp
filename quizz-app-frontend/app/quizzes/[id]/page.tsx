@@ -32,7 +32,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
     useEffect(() => {
         const fetchQuiz = async () => {
             try {
-                const response = await fetch(`/api/quiz/${quizId}`);
+                const response = await fetch(`/api/quizzes/${quizId}`);
                 const data = await response.json();
                 setQuiz(data);
             } catch (error) {

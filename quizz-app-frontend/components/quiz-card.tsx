@@ -16,7 +16,7 @@ export default function QuizCard({quiz}: QuizCardProps) {
     const router = useRouter();
 
     const handleCardClick = () => {
-        router.push(`/home/${quiz.id}`);
+        router.push(`/quizzes/${quiz.id}`);
     };
 
     return (

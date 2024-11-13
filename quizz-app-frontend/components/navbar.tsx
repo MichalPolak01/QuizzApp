@@ -13,13 +13,13 @@ import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
 
+import NavbarAccount from "./NavAccountDropdown";
+
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import {
-  GithubIcon,
   Logo,
 } from "@/components/icons";
-import NavbarAccount from "./NavAccountDropdown";
 import { useAuth } from "@/providers/authProvider";
 
 export const Navbar = () => {

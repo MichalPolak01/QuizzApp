@@ -9,11 +9,21 @@ export const siteConfig = {
       href: "/home",
       authRequired: true
     },
+    {
+      label: "Stwórz quiz",
+      href: "/quizzes/wizard",
+      authRequired: true
+    },
   ],
   navMenuItems: [
     {
       label: "Home",
       href: "/home",
+      authRequired: true
+    },
+    {
+      label: "Stwórz quiz",
+      href: "/quizzes/wizard",
       authRequired: true
     },
     // {

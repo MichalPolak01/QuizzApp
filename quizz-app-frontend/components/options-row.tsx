@@ -8,8 +8,7 @@ export default function OptionsRow() {
     return (
         <div className="flex flex-row justify-center gap-4 py-5 mt-5">
             <Card className="w-[12rem] h-[10rem] hover:scale-110">
-                {/* TODO Zmiana linku */}
-                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="#">
+                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="quizzes/wizard">
                     <BadgePlus className="w-full h-full text-primary-500" />
                     <h3 className="text-primary-500 font-semibold">Dodaj quiz</h3>
                 </Link>
