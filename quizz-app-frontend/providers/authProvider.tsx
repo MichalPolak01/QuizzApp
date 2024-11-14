@@ -38,28 +38,28 @@ export function AuthProvider({children}: AuthProviderProps) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    useEffect(() => {
+    // useEffect(() => {
         
-        const checkToken = async () => {
-            const token = localStorage.getItem(LOCAL_STORAGE_KEY);
+    //     const checkToken = async () => {
+    //         const token = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-            if (token) {
-                setIsAuthenticated(true);
-                setAuthToken(token);
-            } else {
-                setIsAuthenticated(false);
-                setAuthToken(null);
-            }
+    //         if (token) {
+    //             setIsAuthenticated(true);
+    //             setAuthToken(token);
+    //         } else {
+    //             setIsAuthenticated(false);
+    //             setAuthToken(null);
+    //         }
 
-            const storedUsername = localStorage.getItem(LOCAL_USERNAME_KEY);
+    //         const storedUsername = localStorage.getItem(LOCAL_USERNAME_KEY);
 
-            if (storedUsername) {
-                setUsername(storedUsername);
-            }            
-        }
+    //         if (storedUsername) {
+    //             setUsername(storedUsername);
+    //         }            
+    //     }
 
-        checkToken();
-    }, []);
+    //     checkToken();
+    // }, []);
 
     const login = async(username?: string, authToken?: string, refreshToken?: string) => {
         if (authToken) {

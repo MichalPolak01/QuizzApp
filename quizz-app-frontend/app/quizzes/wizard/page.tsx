@@ -75,6 +75,9 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
 
   const handleGenerateQuestions = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateQuizDetails()) return;
+
     setIsGenerating(true);
 
     try {
@@ -89,7 +92,9 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
       });
       const data = await response.json();
 
-      setQuestions(data.questions || []);
+      quizId = data.id;
+
+      router.push(`/quizzes/update/${quizId}`)
     } catch (error) {
 
       toast(`Podczas generowania treści wystąpił błąd: ${error}. Spróbuj ponownie później!`,
@@ -185,10 +190,23 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
     hasAtLeastThreeQuestions: true
   });
 
-  const validateForm = () => {
+  const validateQuizDetails = () => {
     const nameError = formData.name === "";
     const descriptionError = formData.description === "";
     const categoryError = formData.category === "";
+  
+    setValidationErrors((prevErrors) => ({
+      ...prevErrors,
+      name: nameError,
+      description: descriptionError,
+      category: categoryError,
+    }));
+  
+    return !nameError && !descriptionError && !categoryError;
+  };
+  
+  const validateFullQuiz = () => {
+    const isDetailsValid = validateQuizDetails();
   
     const questionsErrors = questions.map((question) => {
       const questionTitleError = question.name === "";
@@ -206,18 +224,14 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
   
     const hasAtLeastThreeQuestions = questions.length >= 3;
   
-    setValidationErrors({
-      name: nameError,
-      description: descriptionError,
-      category: categoryError,
+    setValidationErrors((prevErrors) => ({
+      ...prevErrors,
       questions: questionsErrors,
-      hasAtLeastThreeQuestions: hasAtLeastThreeQuestions
-    });
+      hasAtLeastThreeQuestions: hasAtLeastThreeQuestions,
+    }));
   
     return (
-      !nameError &&
-      !descriptionError &&
-      !categoryError &&
+      isDetailsValid &&
       hasAtLeastThreeQuestions &&
       questionsErrors.every((error) => !error)
     );
@@ -226,12 +240,7 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // const quizData = {
-    //   ...formData,
-    //   questions,
-    // };
-
-    if (!validateForm()) return;
+    if (!validateFullQuiz()) return;
 
     try {
       const quizData = { ...formData, questions };
@@ -243,8 +252,6 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
         body: JSON.stringify(quizData),
       });
 
-      // const data = await response.json();
-
       interface HandleSubmit {
         message?: string,
         id?: number
@@ -255,7 +262,7 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
         data = await response.json();
     } catch { }
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         if (!quizId) router.push(`/quizzes/${data.id}`);
         saveQuizToast(false);
         router.push("/");
@@ -387,8 +394,8 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
                     onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
                   />
                   <Switch
-                    isSelected={option.is_correct}
                     color="secondary"
+                    isSelected={option.is_correct}
                     onChange={() => handleCorrectAnswerChange(qIndex, oIndex)}
                   />
                   <Button

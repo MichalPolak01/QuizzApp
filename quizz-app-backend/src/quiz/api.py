@@ -139,7 +139,7 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
     except User.DoesNotExist:
         return 404, {"message": f"User not found."}
     except Quiz.DoesNotExist:
-        return 404, {"message": f"Quiz with id {quiz_id} not found."}
+        return 404, {"message": f"No quiz with this ID was found for this user."}
     except Exception as e:
         traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
@@ -202,8 +202,9 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                     "role": "user",
                     "content": (
                         f"Generate a multiple-choice quiz for a lesson titled '{lesson_name}' described as '{lesson_description}'. "
-                        "The quiz should include 1 to 3 multiple-choice questions, each with four answer options. "
-                        "The response should be a JSON object with the following structure:\n"
+                        "The quiz should include 1 to 3 multiple-choice questions, each with at least three answer options. "
+                        "Each question should be single-choice, with exactly one correct answer and at least two incorrect answers. "
+                        "The response should be a JSON object with the following structure:"
                         "{"
                         "  'questions': ["
                         "    {"
@@ -218,7 +219,7 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                         "  ]"
                         "}"
                         "Ensure the JSON structure is valid, adheres to this format exactly, and contains no additional text or explanations. "
-                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question."
+                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question, with at least three options."
                     )
                 }
             ]
