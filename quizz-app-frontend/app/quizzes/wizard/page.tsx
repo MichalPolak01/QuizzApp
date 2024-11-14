@@ -92,9 +92,13 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
       });
       const data = await response.json();
 
-      quizId = data.id;
+      if (response.status === 200) {
+        quizId = data.id;
 
-      router.push(`/quizzes/update/${quizId}`)
+        router.push(`/quizzes/update/${quizId}`)
+      } else if (response.status === 401) {
+          auth.loginRequired();
+      }
     } catch (error) {
 
       toast(`Podczas generowania treści wystąpił błąd: ${error}. Spróbuj ponownie później!`,

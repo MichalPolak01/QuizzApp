@@ -1,6 +1,12 @@
 "use client"
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Card } from '@nextui-org/card';
+import { Button } from '@nextui-org/button';
+import toast from 'react-hot-toast';
+
+import { useAuth } from '@/providers/authProvider';
+import { Star } from 'lucide-react';
 
 interface Option {
     name: string;
@@ -21,11 +27,14 @@ interface Quiz {
 
 export default function QuizPage({ params }: { params: { id: string } }) {
     const [quiz, setQuiz] = useState<Quiz | null>(null);
+    const [quizResult, setQuizResult] = useState(0);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [showSummary, setShowSummary] = useState(false);
+    const [rating, setRating] = useState(3);
 
+    const auth = useAuth();
     const router = useRouter();
     const quizId = params.id;
 
@@ -34,11 +43,32 @@ export default function QuizPage({ params }: { params: { id: string } }) {
             try {
                 const response = await fetch(`/api/quizzes/${quizId}`);
                 const data = await response.json();
-                setQuiz(data);
+
+                if (response.status === 200) {
+                    setQuiz(data);
+                } else if (response.status === 401) {
+                    auth.loginRequired();
+                } else if (response.status === 404) {
+                    // TODO NotFound Page
+                    router.push('/');
+                }
             } catch (error) {
-                console.error('Failed to fetch quiz data:', error);
+                toast(`Podczas pobierania quizu wystąpił błąd: ${error}. Spróbuj ponownie później!`,
+                    {
+                        icon: '❌',
+                        style: {
+                        borderRadius: '16px',
+                        textAlign: "center",
+                        padding: '16px',
+                        background: "#006FEE",
+                        color: '#fff',
+                        },
+                    }
+                );
+                router.push('/');
             }
         };
+
         fetchQuiz();
     }, [quizId]);
 
@@ -53,16 +83,22 @@ export default function QuizPage({ params }: { params: { id: string } }) {
             const isCorrect = currentQuestion.options.find(
                 (option) => option.name === selectedOption
             )?.is_correct;
-
+    
+            let updatedScore = score;
+    
             if (isCorrect) {
-                setScore((prevScore) => prevScore + 1);
+                updatedScore = score + 1;
+                setScore(updatedScore);
             }
-
+    
             setSelectedOption(null);
-
+    
             if (currentQuestionIndex + 1 < quiz.questions.length) {
                 setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
             } else {
+                const finalResult = Math.round((updatedScore / quiz.questions.length) * 10000) / 100;
+
+                setQuizResult(finalResult);
                 setShowSummary(true);
             }
         }
@@ -78,57 +114,96 @@ export default function QuizPage({ params }: { params: { id: string } }) {
         setShowSummary(false);
     };
 
+    const handleRating = (index: number) => {
+        setRating(index);
+    };
+
+    const submitQuizResult = async () => {
+        try {
+            await fetch(`/api/quizzes/submit?id=${quiz.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    quiz_score: score,
+                    rating: rating,
+                }),
+            });
+        } catch { }
+    };
+
+    const handleButtonClick = async (redirectPath: string | null) => {
+        await submitQuizResult();
+
+        if (redirectPath) {
+            router.push(redirectPath);
+        } else {
+            handleRestartQuiz();
+        }
+    };
+
     return (
-        <div className="quiz-container">
-            <h1 className="text-2xl font-bold">{quiz.name}</h1>
+        <div className="flex justify-center items-center h-full">
+        <Card className="p-8 w-full">
+            <div className='flex flex-row justify-between'>
+                <h1 className="text-2xl text-primary-500 font-bold mb-2">{quiz.name}</h1>
+                <p className="text-xl text-default-900 font-medium mb-2">Pytanie: {currentQuestionIndex+1}/{quiz.questions.length}</p>
+            </div>
             <p className="text-gray-700">{quiz.description}</p>
 
             {!showSummary ? (
-                <div className="question-section">
+                <div className="mt-8">
                     <h2 className="text-xl mt-4">{currentQuestion.name}</h2>
                     <div className="options-container mt-2">
                         {currentQuestion.options.map((option) => (
                             <button
                                 key={option.name}
-                                onClick={() => handleOptionSelect(option.name)}
                                 className={`option-button ${
                                     selectedOption === option.name
                                         ? 'bg-blue-500 text-white'
                                         : 'bg-gray-200'
                                 } p-2 rounded-lg my-2 w-full text-left`}
+                                onClick={() => handleOptionSelect(option.name)}
                             >
                                 {option.name}
                             </button>
                         ))}
                     </div>
                     <button
-                        onClick={handleNextQuestion}
                         className="next-button bg-blue-500 text-white p-2 rounded-lg mt-4"
                         disabled={!selectedOption}
+                        onClick={handleNextQuestion}
                     >
                         {currentQuestionIndex + 1 === quiz.questions.length
-                            ? 'Show Summary'
-                            : 'Next Question'}
+                            ? 'Pokaż Podsumowanie'
+                            : 'Następne Pytanie'}
                     </button>
                 </div>
             ) : (
-                <div className="summary-section">
-                    <h2 className="text-2xl font-bold mt-4">Quiz Summary</h2>
-                    <p className="text-lg">Your score: {score} / {quiz.questions.length}</p>
-                    <button
-                        onClick={handleRestartQuiz}
-                        className="restart-button bg-green-500 text-white p-2 rounded-lg mt-4"
-                    >
-                        Restart Quiz
-                    </button>
-                    <button
-                        onClick={() => router.push('/')}
-                        className="home-button bg-gray-500 text-white p-2 rounded-lg mt-4"
-                    >
-                        Back to Home
-                    </button>
-                </div>
+                <div className="flex flex-col justify-start pt-20 items-center h-[40svh] ">
+                    <h2 className="text-3xl text-primary font-bold my-4">Podsumowanie quizu</h2>
+                    <p className="text-lg font-semibold">Udało ci się zdobyć: <span className={` ${quizResult >= 75? "text-success": quizResult >= 50? "text-warning": "text-danger"} font-bold`}>{score}/{quiz.questions.length}</span> punkty</p>
+                    <p className="mt-4 text-xl font-semibold">Co daje: <span className={` ${quizResult >= 75? "text-success": quizResult >= 50? "text-warning": "text-danger"} font-bold`}>{quizResult}%</span></p>
+                    <div className='flex flex-row gap-4 mt-8'>
+                    <Button color="primary" variant="shadow" onClick={() => handleButtonClick(null)}>
+                        Powtórz quiz
+                    </Button>
+                    <Button color="default" variant="shadow" onClick={() => handleButtonClick('/')}>
+                        Powrót do domu
+                    </Button>
+                    </div>
+            <div className="flex flex-row gap-1 mt-8">
+                {Array.from({ length: 5 }, (_, index) => (
+                    <Star
+                        key={index}
+                        className={`w-8 h-8 cursor-pointer ${index < rating ? "text-warning" : "text-default-300"}`}
+                        onClick={() => handleRating(index + 1)}
+                    />
+                ))}
+            </div>
+            <p className="mt-2 text-lg font-semibold text-default-500">Twoja ocena kursu: {rating}/5</p>
+        </div>
             )}
+        </Card>
         </div>
     );
 }
