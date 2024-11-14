@@ -1,36 +1,18 @@
-import { Card } from "@nextui-org/card";
-import { Link } from "@nextui-org/link";
-import { BadgePlus, ChartSpline, Clock3, Star } from "lucide-react";
+import { BadgePlus, ChartSpline, Clock3, ScrollText, Trophy, PencilLine } from "lucide-react";
+
+import OptionCard from "./filter-option-card";
 
 
 export default function OptionsRow() {
 
     return (
-        <div className="flex flex-row justify-center gap-4 py-5 mt-5">
-            <Card className="w-[12rem] h-[10rem] hover:scale-110">
-                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="quizzes/wizard">
-                    <BadgePlus className="w-full h-full text-primary-500" />
-                    <h3 className="text-primary-500 font-semibold">Dodaj quiz</h3>
-                </Link>
-            </Card>
-            <Card className="w-[12rem] h-[10rem] hover:scale-110">
-                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="#latest">
-                    <Clock3 className="w-full h-full" />
-                    <h3 className="font-semibold">Najnowsze</h3>
-                </Link>
-            </Card>
-            <Card className="w-[12rem] h-[10rem] hover:scale-110">
-                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="#most-popular">
-                    <ChartSpline className="w-full h-full" />
-                    <h3 className="font-semibold">Najpopularniejsze</h3>
-                </Link>
-            </Card>
-            <Card className="w-[12rem] h-[10rem] hover:scale-110">
-                <Link className="p-5 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" href="#highest-rated">
-                    <Star className="w-full h-full" />
-                    <h3 className="font-semibold">Najwyżej oceniane</h3>
-                </Link>
-            </Card>
-        </div>
+        <div className="flex flex-row flex-wrap justify-center gap-3 py-5 mt-5">
+            <OptionCard color="primary" href="quizzes/wizard" icon={BadgePlus} text="Dodaj quiz" />
+            <OptionCard color="default-800" href="/quizzes#my" icon={PencilLine} text="Moje" />
+            <OptionCard color="default-800" href="#latest" icon={Clock3} text="Najnowsze" />
+            <OptionCard color="default-800" href="#most-popular" icon={ChartSpline} text="Najpopularniejsze" />
+            <OptionCard color="default-800" href="#highest-rated" icon={Trophy} text="Najwyżej oceniane" />
+            <OptionCard color="default-800" href="/quizzes#all" icon={ScrollText} text="Wszystkie" />
+      </div>
     )
 }

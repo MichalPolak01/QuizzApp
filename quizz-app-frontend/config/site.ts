@@ -10,6 +10,11 @@ export const siteConfig = {
       authRequired: true
     },
     {
+      label: "Quizy",
+      href: "/quizzes",
+      authRequired: true
+    },
+    {
       label: "Stwórz quiz",
       href: "/quizzes/wizard",
       authRequired: true
@@ -19,6 +24,11 @@ export const siteConfig = {
     {
       label: "Home",
       href: "/home",
+      authRequired: true
+    },
+    {
+      label: "Quizy",
+      href: "/quizzes",
       authRequired: true
     },
     {

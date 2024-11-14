@@ -20,7 +20,7 @@ export default function QuizCard({quiz}: QuizCardProps) {
     };
 
     return (
-        <Card className="w-full hover:scale-105" >
+        <Card className="lg:w-[25rem] w-full hover:scale-105" >
             <Link className="pt-4 text-default-900 flex flex-col h-full cursor-pointer hover:bg-default-100" onClick={handleCardClick}>
                 <CardBody className="overflow-visible py-2 flex flex-row">
                     <div className="w-2/5 h-full">

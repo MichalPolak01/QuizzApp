@@ -14,36 +14,41 @@ interface QuizzesRowProps {
 
 const OPTION_QUIZZES_URL = "api/quizzes";
 
-export default function QuizzesRow({title, option}: QuizzesRowProps) {
+export default function QuizzesRow({ title, option }: QuizzesRowProps) {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     const auth = useAuth();
-    
+
     useEffect(() => {
         const fetchQuizzes = async () => {
-            const response = await fetch(`${OPTION_QUIZZES_URL}?option=${option}`, {
+            const query = new URLSearchParams({
+                limit: "3",
+                ...(option && { filter: option })
+            });
+
+            const response = await fetch(`${OPTION_QUIZZES_URL}?${query}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                }
-            })
+                },
+            });
 
             if (response.ok) {
                 const data: Quiz[] = await response.json();
-            
+
                 setQuizzes(data);
             } else if (response.status == 401) {
                 auth.loginRequired();
             } else {
-                setError('Failed to fetch quizzes!');
+                setError("Failed to fetch quizzes!");
             }
         };
 
         fetchQuizzes();
     }, [option]);
 
-    if (error) return <h1>Error: {error}</h1>
+    if (error) return <h1>Error: {error}</h1>;
 
     return (
         <div className="pt-20" id={option}>
@@ -54,5 +59,5 @@ export default function QuizzesRow({title, option}: QuizzesRowProps) {
                 ))}
             </div>
         </div>
-    )
+    );
 }

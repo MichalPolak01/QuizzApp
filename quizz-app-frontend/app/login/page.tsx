@@ -10,7 +10,6 @@ import toast from "react-hot-toast";
 
 import { useAuth } from "@/providers/authProvider";
 import { validateEmail } from "@/lib/formValidators";
-import { access } from "fs";
 
 
 const LOGIN_URL = "api/login"

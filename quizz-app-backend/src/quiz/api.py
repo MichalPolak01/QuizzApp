@@ -4,7 +4,7 @@ from ninja_extra import Router
 from django.db.models import Avg
 from openai import OpenAI
 from decouple import config
-from typing import List
+from typing import List, Optional
 import helpers
 
 from authentication.models import User
@@ -69,41 +69,35 @@ def create_quiz(request, payload: QuizSchema):
         return 500, {"message": "An unexpected error occurred."}
 
 
-@router.get('', response={200: list[QuizResponseSchema], 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
-def get_quizzes(request):
+@router.get('', response={200: List[QuizResponseSchema], 400: MessageSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def get_quizzes(request, filter: Optional[str] = None, limit: Optional[int] = None):
     try:
-        quizzes = Quiz.objects.filter(is_removed=False)
-        return quizzes
-    except Quiz.DoesNotExist:
-        return 404, {"message": f"Quizes not found."}
-    except Exception as e:
-        return 500, {"message": "An unexpected error occurred."}
-    
+        user = request.user
 
-@router.get('/filter/{option}', response={200: List[QuizResponseSchema], 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
-def get_quizzes(request, option: str):
-    try:
-        if option == "my":
-            user = request.user
-            quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')[:3]
-
-        elif option == "latest":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')[:3]
-
-        elif option == "highest-rated":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')[:3]
-
-        elif option == "most-popular":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')[:3]
-
+        if filter == "my":
+            quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')
+        
+        elif filter == "latest":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')
+        
+        elif filter == "highest-rated":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')
+        
+        elif filter == "most-popular":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')
+        
         else:
-            return 400, {"message": "Invalid option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
+            if filter is not None:
+                return 400, {"message": "Invalid filter option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
+            quizzes = Quiz.objects.filter(is_removed=False)
+
+        if limit:
+            quizzes = quizzes[:limit]
 
         return 200, quizzes
-    except User.DoesNotExist:
-        return 404, {"message": f"User not found."}
+
     except Quiz.DoesNotExist:
-        return 404, {"message": f"Quizes not found."}
+        return 404, {"message": f"Quizzes not found."}
     except Exception as e:
         traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}

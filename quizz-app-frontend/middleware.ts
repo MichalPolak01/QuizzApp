@@ -6,14 +6,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 const protectedRoutes = ["/profile", "/home", "/quizzes"];
 
-const publicRoutes = ["/login", "/register"];
+const publicRoutes = [ "/register"];
 
 function isTokenExpired(token: string): boolean {
     try {
         const decoded: { exp?: number } = jwtDecode(token);
 
         return decoded.exp ? decoded.exp < Date.now() / 1000 : true;
-    } catch (error) {
+    } catch {
         return true;
     }
 }
