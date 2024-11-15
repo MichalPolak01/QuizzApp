@@ -2,13 +2,15 @@ import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import clsx from "clsx";
+import { Link } from "@nextui-org/link";
 
 import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import { Navbar } from "@/components/navbar";
+import {Navbar} from "@/components/navbar";
 import { AuthProvider } from "@/providers/authProvider";
+
 
 
 export const metadata: Metadata = {
@@ -47,14 +49,15 @@ export default function RootLayout({
             <AuthProvider>
               <div className="relative flex flex-col h-screen">
                 <Navbar />
-                <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+                <main className="container mx-auto max-w-7xl pt-4 px-6 flex-grow">
                   {children}
                   <Toaster
                     position="bottom-right"
                     reverseOrder={false}
                   />
                 </main>
-                {/* <footer className="w-full flex items-center justify-center py-3">
+                <footer className="container mx-auto flex items-center justify-between p-5 border-t-2 border-default-300 mt-10">
+                  <span className="text-default-600">Copyright &copy; 2024 Michał Polak</span>
                   <Link
                     isExternal
                     className="flex items-center gap-1 text-current"
@@ -64,7 +67,7 @@ export default function RootLayout({
                     <span className="text-default-600">Powered by</span>
                     <p className="text-primary">NextUI</p>
                   </Link>
-                </footer> */}
+                </footer>
               </div>
           </AuthProvider>
         </Providers>

@@ -4,7 +4,7 @@ from ninja_extra import Router
 from django.db.models import Avg
 from openai import OpenAI
 from decouple import config
-from typing import List
+from typing import List, Optional
 import helpers
 
 from authentication.models import User
@@ -69,41 +69,35 @@ def create_quiz(request, payload: QuizSchema):
         return 500, {"message": "An unexpected error occurred."}
 
 
-@router.get('', response={200: list[QuizResponseSchema], 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
-def get_quizzes(request):
+@router.get('', response={200: List[QuizResponseSchema], 400: MessageSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def get_quizzes(request, filter: Optional[str] = None, limit: Optional[int] = None):
     try:
-        quizzes = Quiz.objects.filter(is_removed=False)
-        return quizzes
-    except Quiz.DoesNotExist:
-        return 404, {"message": f"Quizes not found."}
-    except Exception as e:
-        return 500, {"message": "An unexpected error occurred."}
-    
+        user = request.user
 
-@router.get('/filter/{option}', response={200: List[QuizResponseSchema], 400: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
-def get_quizzes(request, option: str):
-    try:
-        if option == "my":
-            user = request.user
+        if filter == "my":
             quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')
-
-        elif option == "latest":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')[:10]
-
-        elif option == "highest-rated":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')[:10]
-
-        elif option == "most-popular":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')[:10]
-
+        
+        elif filter == "latest":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')
+        
+        elif filter == "highest-rated":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')
+        
+        elif filter == "most-popular":
+            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')
+        
         else:
-            return 400, {"message": "Invalid option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
+            if filter is not None:
+                return 400, {"message": "Invalid filter option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
+            quizzes = Quiz.objects.filter(is_removed=False)
+
+        if limit:
+            quizzes = quizzes[:limit]
 
         return 200, quizzes
-    except User.DoesNotExist:
-        return 404, {"message": f"User not found."}
+
     except Quiz.DoesNotExist:
-        return 404, {"message": f"Quizes not found."}
+        return 404, {"message": f"Quizzes not found."}
     except Exception as e:
         traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
@@ -139,7 +133,7 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
     except User.DoesNotExist:
         return 404, {"message": f"User not found."}
     except Quiz.DoesNotExist:
-        return 404, {"message": f"Quiz with id {quiz_id} not found."}
+        return 404, {"message": f"No quiz with this ID was found for this user."}
     except Exception as e:
         traceback.print_exc()
         return 500, {"message": "An unexpected error occurred."}
@@ -202,8 +196,9 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                     "role": "user",
                     "content": (
                         f"Generate a multiple-choice quiz for a lesson titled '{lesson_name}' described as '{lesson_description}'. "
-                        "The quiz should include 1 to 3 multiple-choice questions, each with four answer options. "
-                        "The response should be a JSON object with the following structure:\n"
+                        "The quiz should include 1 to 3 multiple-choice questions, each with at least three answer options. "
+                        "Each question should be single-choice, with exactly one correct answer and at least two incorrect answers. "
+                        "The response should be a JSON object with the following structure:"
                         "{"
                         "  'questions': ["
                         "    {"
@@ -218,7 +213,7 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                         "  ]"
                         "}"
                         "Ensure the JSON structure is valid, adheres to this format exactly, and contains no additional text or explanations. "
-                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question."
+                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question, with at least three options."
                     )
                 }
             ]

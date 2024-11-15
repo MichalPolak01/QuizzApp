@@ -62,7 +62,7 @@ export default function Page() {
             } catch { }
 
             if (response.status == 200) {
-                auth.login(data.username, data.role, data.access, data.refresh);
+                auth.login(data.username, data.access, data.refresh);
                 setLoginError(false);
                 showToast(false);
             } else if (response.status == 400 || response.status == 401) {

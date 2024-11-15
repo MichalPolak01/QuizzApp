@@ -15,7 +15,7 @@ export default function Page() {
   };
   
     return (
-      <div className="flex flex-col justify-center ">
+      <div className="flex flex-col justify-center mt-10">
         <Card className="w-full p-8">
           <CardHeader className="p-2 flex-col items-start border-b-2 border-default-200 mb-4">
             <h1 className="text-primary text-4xl font-semibold mb-2">Profil</h1>
