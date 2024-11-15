@@ -36,30 +36,11 @@ export const siteConfig = {
       href: "/quizzes/wizard",
       authRequired: true
     },
-    // {
-    //   label: "Dashboard",
-    //   href: "/dashboard",
-    // },
-    // {
-    //   label: "Projects",
-    //   href: "/projects",
-    // },
-    // {
-    //   label: "Team",
-    //   href: "/team",
-    // },
-    // {
-    //   label: "Calendar",
-    //   href: "/calendar",
-    // },
-    // {
-    //   label: "Settings",
-    //   href: "/settings",
-    // },
-    // {
-    //   label: "Help & Feedback",
-    //   href: "/help-feedback",
-    // },
+    {
+      label: "Ustwaienia profilowe",
+      href: "/profile",
+      authRequired: true
+    },
     {
       label: "Logowanie",
       href: "/login",

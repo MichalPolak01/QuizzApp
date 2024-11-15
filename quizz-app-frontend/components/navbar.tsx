@@ -34,7 +34,7 @@ export const Navbar = () => {
             <p className="font-bold text-inherit text-primary-500">QuizzApp</p>
           </NextLink>
         </NavbarBrand>
-        <ul className="hidden lg:flex gap-4 justify-start ml-2">
+        <ul className="hidden sm:flex gap-4 justify-start ml-2">
           {siteConfig.navItems.map((item) => (
             (!item.authRequired || auth.isAuthenticated) && (
               <NavbarItem key={item.href}>
@@ -95,7 +95,7 @@ export const Navbar = () => {
                       ? "danger"
                       : "foreground"
                 }
-                href="#"
+                href={item.href}
                 size="lg"
               >
                 {item.label}
