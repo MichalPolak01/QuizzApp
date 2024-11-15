@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
 import toast from 'react-hot-toast';
+import { Star } from 'lucide-react';
 
 import { useAuth } from '@/providers/authProvider';
-import { Star } from 'lucide-react';
 
 interface Option {
     name: string;
