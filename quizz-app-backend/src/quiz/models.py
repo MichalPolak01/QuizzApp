@@ -26,6 +26,7 @@ class Quiz(models.Model):
     average_score = models.FloatField(default=0.0)
     average_rating = models.FloatField(default=0.0)
     is_removed = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="quizzes", null=True, blank=True)
     last_updated = models.DateTimeField(auto_now=True)
 

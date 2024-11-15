@@ -24,7 +24,8 @@ def create_quiz(request, payload: QuizDetailSchema):
             name=payload.name,
             description=payload.description,
             category=payload.category,
-            created_by=request.user
+            created_by=request.user,
+            is_public=request.is_public
         )
 
         for question_data in payload.questions:
@@ -47,7 +48,8 @@ def create_quiz(request, payload: QuizSchema):
             name=payload.name,
             description=payload.description,
             category=payload.category,
-            created_by=request.user
+            created_by=request.user,
+            is_public=request.is_public
         )
 
         generated_quiz = generate_quiz(lesson_name=payload.name, lesson_description=payload.description, language="polish")
@@ -78,18 +80,18 @@ def get_quizzes(request, filter: Optional[str] = None, limit: Optional[int] = No
             quizzes = Quiz.objects.filter(created_by=user, is_removed=False).order_by('-last_updated')
         
         elif filter == "latest":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-last_updated')
+            quizzes = Quiz.objects.filter(is_removed=False, is_public=True).order_by('-last_updated')
         
         elif filter == "highest-rated":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-average_rating')
+            quizzes = Quiz.objects.filter(is_removed=False, is_public=True).order_by('-average_rating')
         
         elif filter == "most-popular":
-            quizzes = Quiz.objects.filter(is_removed=False).order_by('-user_count')
+            quizzes = Quiz.objects.filter(is_removed=False, is_public=True).order_by('-user_count')
         
         else:
             if filter is not None:
                 return 400, {"message": "Invalid filter option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."}
-            quizzes = Quiz.objects.filter(is_removed=False)
+            quizzes = Quiz.objects.filter(is_removed=False, is_public=True)
 
         if limit:
             quizzes = quizzes[:limit]
@@ -120,6 +122,8 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
         quiz = Quiz.objects.get(id=quiz_id, created_by=request.user)
         quiz.name = payload.name
         quiz.description = payload.description
+        quiz.category = payload.category
+        quiz.is_public = payload.is_public
         quiz.save()
 
         quiz.questions.all().delete()

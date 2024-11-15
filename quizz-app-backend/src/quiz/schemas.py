@@ -21,6 +21,7 @@ class QuizSchema(Schema):
     user_count: Optional[int] = 0
     average_score: Optional[float] = 0.0
     average_rating: Optional[float] = 0.0
+    is_public: bool
 
     @field_validator("category")
     def validate_category(cls, value):
@@ -36,6 +37,7 @@ class QuizResponseSchema(Schema):
     average_rating: float = Field(ge=0, le=5)
     created_by: UserDetailSchema
     last_updated: datetime
+    is_public: bool
 
 class QuizDetailSchema(QuizSchema):
     questions: List[QuestionSchema]
