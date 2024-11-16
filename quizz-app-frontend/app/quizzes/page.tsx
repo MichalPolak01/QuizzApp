@@ -19,47 +19,45 @@ export default function Quizzes() {
     const auth = useAuth();
 
     useEffect(() => {
-        const fetchQuizzes = async () => {
-            const response = await fetch(`${OPTION_QUIZZES_URL}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+        const fetchQuizzesWithFilter = async (filter: string | null) => {
+          try {
+            const query = filter ? `?filter=${filter}` : "";
+            const response = await fetch(`${OPTION_QUIZZES_URL}${query}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
             });
-
+      
             if (response.ok) {
-                const data: Quiz[] = await response.json();
+              return response.json();
+            } else if (response.status === 401) {
+              auth.loginRequired();
 
-                setQuizzes(data);
-            } else if (response.status == 401) {
-                auth.loginRequired();
+              return null;
             } else {
-                setError("Failed to fetch quizzes!");
+              throw new Error("Failed to fetch quizzes!");
             }
+          } catch {
+            setError("Wystąpił problem z pobraniem danych.");
+
+            return null;
+          }
         };
-
-        const fetchMyQuizzes = async () => {
-            const response = await fetch(`${OPTION_QUIZZES_URL}?filter=my`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (response.ok) {
-                const data: Quiz[] = await response.json();
-
-                setMyQuizzes(data);
-            } else if (response.status == 401) {
-                auth.loginRequired();
-            } else {
-                setError("Failed to fetch quizzes!");
-            }
+      
+        const fetchAllData = async () => {
+          const [allQuizzes, myQuizzes] = await Promise.all([
+            fetchQuizzesWithFilter(null),
+            fetchQuizzesWithFilter("my"),
+          ]);
+      
+          if (allQuizzes) setQuizzes(allQuizzes);
+          if (myQuizzes) setMyQuizzes(myQuizzes);
         };
-
-        fetchQuizzes();
-        fetchMyQuizzes();
-    }, []);
+      
+        fetchAllData();
+      }, []);
+      
 
     if (error) return <h1>Error: {error}</h1>;
 
@@ -72,6 +70,7 @@ export default function Quizzes() {
             </div>
             <h2 className="text-2xl text-primary-500 text-center font-semibold pt-20 pb-4" id="my">Moje quizy</h2>
             <div className="flex lg:flex-row flex-wrap flex-col justify-center gap-4 my-4">
+                { myQuizzes.length === 0 && <p className="italic font-light text-center">Nie masz jeszcze żadnych quizów!</p>}
                 {myQuizzes.map((quiz) => (
                     <QuizCard key={quiz.id} quiz={quiz} />
                 ))}

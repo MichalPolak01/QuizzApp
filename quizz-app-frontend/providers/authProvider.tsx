@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, createContext, useContext } from "react"
 
 import { setToken, setRefreshToken, deleteTokens } from "@/lib/authClient";
+import { deleteTokens as deleteServerTokens } from "@/lib/authServer";
 
 interface AuthContextProps {
     isAuthenticated: boolean
@@ -20,7 +21,7 @@ const LOGIN_REDIRECT_URL = "/home"
 const LOGOUT_REDIRECT_URL = "/login"
 const LOGIN_REQUIRED_URL = "/login"
 
-const LOCAL_STORAGE_KEY = "is-logged-in"
+const LOCAL_STORAGE_KEY = "auth-token"
 const LOCAL_USERNAME_KEY = "username"
 
 
@@ -94,14 +95,16 @@ export function AuthProvider({children}: AuthProviderProps) {
     const logout = () => {
         setIsAuthenticated(false);
         deleteTokens();
-        localStorage.setItem(LOCAL_STORAGE_KEY, "0");
+        deleteServerTokens();
+        localStorage.removeItem(LOCAL_USERNAME_KEY);
         router.replace(LOGOUT_REDIRECT_URL);
     }
 
     const loginRequired = () => {
         setIsAuthenticated(false);
         deleteTokens();
-        localStorage.setItem(LOCAL_STORAGE_KEY, "0");
+        deleteServerTokens();
+        localStorage.removeItem(LOCAL_USERNAME_KEY);
         const loginWithNextUrl = `${LOGIN_REQUIRED_URL}?next=${pathname}`;
 
         router.replace(loginWithNextUrl);

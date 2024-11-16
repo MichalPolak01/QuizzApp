@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const protectedRoutes = ["/profile", "/home", "/quizzes"];
 
-const publicRoutes = [ "/register"];
+const publicRoutes = ["/login", "/register", "/"];
 
 function isTokenExpired(token: string): boolean {
     try {
@@ -27,7 +27,7 @@ export default async function middleware(request: NextRequest) {
     const isAuthenticated = token && !isTokenExpired(token);
 
     if (isPublicRoute && isAuthenticated) {
-        return NextResponse.redirect(new URL("/", request.nextUrl));
+        return NextResponse.redirect(new URL("/home", request.nextUrl));
     }
 
     if (isProtectedRoute && !isAuthenticated) {
@@ -38,8 +38,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: [
-        "/((?!api|_next/static|_next/image|.*\\.png$).*)",
-        "/quizzes/:path*",
-    ],
+    matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
 };

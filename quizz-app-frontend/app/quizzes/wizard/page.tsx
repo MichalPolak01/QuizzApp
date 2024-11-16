@@ -44,24 +44,42 @@ export default function QuizPage({ quizId }: QuizPageProps) {
       const fetchQuiz = async () => {
         try {
           const response = await fetch(`/api/quizzes/${quizId}`);
-          const data = await response.json();
+  
+          if (response.status === 401) {
+            auth.loginRequired();
 
+            return;
+          }
+  
+          if (response.status === 404) {
+            router.push("/not-found");
+
+            return;
+          }
+  
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+  
+          const data = await response.json();
+  
           setFormData({
             name: data.name,
             description: data.description,
             category: data.category,
             is_public: data.is_public,
           });
-          
           setQuestions(data.questions || []);
         } catch {
           toast.error("Nie udało się pobrać danych quizu.");
         }
       };
-
+  
       fetchQuiz();
     }
   }, [quizId]);
+  
+
 
 const handleFormChange = (event: { target: { name: string; value: string } }) => {
     const { name, value } = event.target;
@@ -269,7 +287,7 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
       if (response.status === 200 || response.status === 201) {
         if (!quizId) router.push(`/quizzes/${data.id}`);
         saveQuizToast(false);
-        router.push("/");
+        router.push("/home");
       } else if (response.status === 401) {
         auth.loginRequired();
       } else if (response.status === 404 && data.message === "No quiz with this ID was found for this user.") {
@@ -355,7 +373,7 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
         </Select>
 
           <Switch
-            checked={formData.is_public}
+            isSelected={formData.is_public}
             onChange={() => setFormData((prev) => ({ ...prev, is_public: !prev.is_public }))}
           >
             {formData.is_public ? "Quiz Publiczny" : "Quiz Prywatny"}

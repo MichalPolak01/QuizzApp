@@ -39,19 +39,30 @@ export default function QuizPage({ params }: { params: { id: string } }) {
     const quizId = params.id;
 
     useEffect(() => {
-        const fetchQuiz = async () => {
+        if (quizId) {
+          const fetchQuiz = async () => {
             try {
-                const response = await fetch(`/api/quizzes/${quizId}`);
-                const data = await response.json();
-
-                if (response.status === 200) {
-                    setQuiz(data);
-                } else if (response.status === 401) {
-                    auth.loginRequired();
-                } else if (response.status === 404) {
-                    // TODO NotFound Page
-                    router.push('/');
-                }
+              const response = await fetch(`/api/quizzes/${quizId}`);
+      
+              if (response.status === 401) {
+                auth.loginRequired();
+    
+                return;
+              }
+      
+              if (response.status === 404) {
+                router.push("/not-found");
+    
+                return;
+              }
+      
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+      
+              const data = await response.json();
+      
+              setQuiz(data);
             } catch (error) {
                 toast(`Podczas pobierania quizu wystąpił błąd: ${error}. Spróbuj ponownie później!`,
                     {
@@ -65,12 +76,14 @@ export default function QuizPage({ params }: { params: { id: string } }) {
                         },
                     }
                 );
-                router.push('/');
+                router.push('/home');
             }
-        };
+          };
+      
+          fetchQuiz();
+        }
+      }, [quizId]);
 
-        fetchQuiz();
-    }, [quizId]);
 
     if (!quiz) {
         return <p>Loading quiz...</p>;
@@ -187,7 +200,7 @@ export default function QuizPage({ params }: { params: { id: string } }) {
                     <Button color="primary" variant="shadow" onClick={() => handleButtonClick(null)}>
                         Powtórz quiz
                     </Button>
-                    <Button color="default" variant="shadow" onClick={() => handleButtonClick('/')}>
+                    <Button color="default" variant="shadow" onClick={() => handleButtonClick('/home')}>
                         Powrót do domu
                     </Button>
                     </div>

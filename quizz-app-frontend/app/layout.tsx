@@ -56,7 +56,7 @@ export default function RootLayout({
                     reverseOrder={false}
                   />
                 </main>
-                <footer className="container mx-auto flex items-center justify-between p-5 border-t-2 border-default-300 mt-10">
+                <footer className="z-50 container mx-auto flex flex-wrap gap-4 items-center sm:justify-between justify-center p-5 border-t-2 border-default-300 mt-10">
                   <span className="text-default-600">Copyright &copy; 2024 Michał Polak</span>
                   <Link
                     isExternal
