@@ -8,8 +8,6 @@ import OptionsRow from '@/components/options-row';
 
 
 export default function Page() {
-
-
     return (
         <div >
             <div className="relative h-[30svh] w-full rounded-xl overflow-hidden flex items-center justify-center">

@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, createContext, useContext } from "react"
 
-import { setToken, setRefreshToken, deleteTokens } from "@/lib/authClient";
+import { setToken, setRefreshToken, deleteTokens, isTokenExpired } from "@/lib/authClient";
 import { deleteTokens as deleteServerTokens } from "@/lib/authServer";
 
 interface AuthContextProps {
@@ -29,7 +29,6 @@ interface AuthProviderProps {
     children: React.ReactNode
 }
 
-
 export function AuthProvider({children}: AuthProviderProps) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState("");
@@ -45,11 +44,18 @@ export function AuthProvider({children}: AuthProviderProps) {
             const token = localStorage.getItem(LOCAL_STORAGE_KEY);
 
             if (token) {
+                if (isTokenExpired(token)) {
+                    loginRequired();
+                    
+                    return;
+                }
+
                 setIsAuthenticated(true);
                 setAuthToken(token);
             } else {
-                setIsAuthenticated(false);
-                setAuthToken(null);
+                loginRequired();
+                    
+                return;
             }
 
             const storedUsername = localStorage.getItem(LOCAL_USERNAME_KEY);
@@ -97,6 +103,7 @@ export function AuthProvider({children}: AuthProviderProps) {
         deleteTokens();
         deleteServerTokens();
         localStorage.removeItem(LOCAL_USERNAME_KEY);
+        
         router.replace(LOGOUT_REDIRECT_URL);
     }
 

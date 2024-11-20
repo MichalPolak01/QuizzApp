@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 import QuizCard from "./quiz-card"
 
-import { Quiz } from "@/app/home/types";
 import { useAuth } from "@/providers/authProvider";
+import { Quiz } from "@/config/types";
 
 interface QuizzesRowProps {
     title: string;

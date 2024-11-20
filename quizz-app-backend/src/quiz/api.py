@@ -24,8 +24,8 @@ def create_quiz(request, payload: QuizDetailSchema):
             name=payload.name,
             description=payload.description,
             category=payload.category,
+            is_public=payload.is_public,
             created_by=request.user,
-            is_public=request.is_public
         )
 
         for question_data in payload.questions:
@@ -48,8 +48,8 @@ def create_quiz(request, payload: QuizSchema):
             name=payload.name,
             description=payload.description,
             category=payload.category,
+            is_public=payload.is_public,
             created_by=request.user,
-            is_public=request.is_public
         )
 
         generated_quiz = generate_quiz(lesson_name=payload.name, lesson_description=payload.description, language="polish")
@@ -200,7 +200,7 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                     "role": "user",
                     "content": (
                         f"Generate a multiple-choice quiz for a lesson titled '{lesson_name}' described as '{lesson_description}'. "
-                        "The quiz should include 1 to 3 multiple-choice questions, each with at least three answer options. "
+                        "The quiz should include 5 to 10 multiple-choice questions, each with at least three answer options! "
                         "Each question should be single-choice, with exactly one correct answer and at least two incorrect answers. "
                         "The response should be a JSON object with the following structure:"
                         "{"

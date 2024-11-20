@@ -8,6 +8,7 @@ import { Switch } from "@nextui-org/switch";
 import { Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@nextui-org/spinner";
 
 import { categories } from "@/config/data";
 import { useAuth } from "@/providers/authProvider";
@@ -105,12 +106,13 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          category: formData.category
+          category: formData.category,
+          is_public: formData.is_public
         }),
       });
       const data = await response.json();
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         quizId = data.id;
 
         router.push(`/quizzes/update/${quizId}`)
@@ -326,138 +328,145 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
 }
 
   return (
-    <Card className="p-10">
-      <CardHeader>
-        <h1 className="text-primary text-4xl font-semibold mb-2">{quizId ? "Stwórz Quiz" : "Edytuj Quiz"}</h1>
-      </CardHeader>
-      <CardBody>
-        <form className="overflow-visible flex flex-col gap-5" onSubmit={handleSubmit}>
-          <Input
-            color={validationErrors.name? "danger" : "default"}
-            errorMessage="Podanie tematu quizu jest wymagane!"
-            isInvalid={validationErrors.name}
-            isRequired={true}
-            label="Temat quizu"
+    <div className="relative">
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Spinner color="primary" size="lg" />
+        </div>
+      )}
+      <Card className="p-10">
+        <CardHeader>
+          <h1 className="text-primary text-4xl font-semibold mb-2">{quizId ? "Stwórz Quiz" : "Edytuj Quiz"}</h1>
+        </CardHeader>
+        <CardBody>
+          <form className="overflow-visible flex flex-col gap-5" onSubmit={handleSubmit}>
+            <Input
+              color={validationErrors.name? "danger" : "default"}
+              errorMessage="Podanie tematu quizu jest wymagane!"
+              isInvalid={validationErrors.name}
+              isRequired={true}
+              label="Temat quizu"
+              labelPlacement="outside"
+              name="name"
+              placeholder="Podaj temat quizu"
+              value={formData.name}
+              onChange={handleFormChange}
+            />
+            <Textarea
+              color={validationErrors.description? "danger" : "default"}
+              errorMessage="Podanie opisu quizu jest wymagane!"
+              isInvalid={validationErrors.description}
+              isRequired={true}
+              label="Opis quizu"
+              labelPlacement="outside"
+              name="description"
+              placeholder="Podaj krótki opis quizu"
+              value={formData.description}
+              onChange={handleFormChange}
+            />
+          <Select
+            isInvalid={validationErrors.category}
+            label="Kategoria"
             labelPlacement="outside"
-            name="name"
-            placeholder="Podaj temat quizu"
-            value={formData.name}
-            onChange={handleFormChange}
-          />
-          <Textarea
-            color={validationErrors.description? "danger" : "default"}
-            errorMessage="Podanie opisu quizu jest wymagane!"
-            isInvalid={validationErrors.description}
-            isRequired={true}
-            label="Opis quizu"
-            labelPlacement="outside"
-            name="description"
-            placeholder="Podaj krótki opis quizu"
-            value={formData.description}
-            onChange={handleFormChange}
-          />
-        <Select
-          isInvalid={validationErrors.category}
-          label="Kategoria"
-          labelPlacement="outside"
-          name="category"
-          placeholder="Wybierz kategorię quizu"
-          value={formData.category}
-          onChange={(e) => handleFormChange({ target: { name: "category", value: e.target.value } })}
-          >
-          {categories.map((category) => (
-            <SelectItem key={category.value} value={category.value}>
-            {category.label}
-            </SelectItem>
-        ))}
-        </Select>
-
-          <Switch
-            isSelected={formData.is_public}
-            onChange={() => setFormData((prev) => ({ ...prev, is_public: !prev.is_public }))}
-          >
-            {formData.is_public ? "Quiz Publiczny" : "Quiz Prywatny"}
-          </Switch>
-
-          {questions.length === 0 && (
-            <Button
-              className="mt-4"
-              color="primary"
-              disabled={isGenerating}
-              type="button"
-              onClick={handleGenerateQuestions}
+            name="category"
+            placeholder="Wybierz kategorię quizu"
+            value={formData.category}
+            onChange={(e) => handleFormChange({ target: { name: "category", value: e.target.value } })}
             >
-              {isGenerating ? "Generowanie Pytań..." : "Wygeneruj Pytania"}
-            </Button>
-          )}
-          <div>
-            <h2 className="text-xl font-semibold mt-5">Pytania:</h2>
-            {!validationErrors.hasAtLeastThreeQuestions &&
-              <p className="text-danger text-md">Quiz musi posiadać co najmniej 3 pytania!</p>
-            }
-          </div>
-          {questions.map((question, qIndex) => (
-            <div key={qIndex} className="mb-4 p-4 ml-16 border border-default-200 rounded-lg">
-              <h3 className="text-lg font-semibold my-3 text-secondary">Pytanie {qIndex + 1}</h3>
-              <Input
-                errorMessage="Każde pytanie wymaga tytułu, co najmniej 3 odpowiedzi i jednej poprawnej."
-                isInvalid={validationErrors.questions[qIndex]}
-                placeholder="Podaj pytanie"
-                value={question.name}
-                onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-              />
-              <h3 className="mt-3">Odpowiedzi:</h3>
-              {question.options.map((option, oIndex) => (
-                <div key={oIndex} className="flex items-center gap-2 mt-2 pl-8">
-                  <Input
-                  isInvalid={validationErrors.questions[qIndex] && option.name === ""}
-                    placeholder={`Odpowiedź ${oIndex + 1}`}
-                    value={option.name}
-                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                  />
-                  <Switch
-                    color="secondary"
-                    isSelected={option.is_correct}
-                    onChange={() => handleCorrectAnswerChange(qIndex, oIndex)}
-                  />
-                  <Button
-                    color="danger"
-                    variant="bordered"
-                    onClick={() => handleDeleteOption(qIndex, oIndex)}
-                  >
-                    <Trash2 size={16}/>
-                  </Button>
-                </div>
-              ))}
-              <div className="flex flex-row justify-start items-center gap-4 mt-3">
-              <Button
-                className="mt-2"
-                color="secondary"
-                onClick={() => handleAddOption(qIndex)}
-              >
-                Dodaj Odpowiedź
-              </Button>
-              <Button
-                className="mt-2"
-                color="danger"
-                variant="bordered"
-                onClick={() => handleDeleteQuestion(qIndex)}
-              >
-                <Trash2 size={16} /> Usuń pytanie
-              </Button>
-              </div>
-            </div>
+            {categories.map((category) => (
+              <SelectItem key={category.value} value={category.value}>
+              {category.label}
+              </SelectItem>
           ))}
+          </Select>
 
-          <Button className="mt-4 ml-16" color="secondary" onClick={handleAddQuestion}>
-            Dodaj Pytanie
-          </Button>
+            <Switch
+              isSelected={formData.is_public}
+              onChange={() => setFormData((prev) => ({ ...prev, is_public: !prev.is_public }))}
+            >
+              {formData.is_public ? "Quiz Publiczny" : "Quiz Prywatny"}
+            </Switch>
 
-          <Button className="mt-6" color="primary" type="submit">
-            {quizId ? "Zaktualizuj Quiz" : "Stwórz Quiz"}
-          </Button>
-        </form>
-      </CardBody>
-    </Card>
+            {questions.length === 0 && (
+              <Button
+                className="mt-4"
+                color="primary"
+                disabled={isGenerating}
+                type="button"
+                onClick={handleGenerateQuestions}
+              >
+                {isGenerating ? "Generowanie Pytań..." : "Wygeneruj Pytania"}
+              </Button>
+            )}
+            <div>
+              <h2 className="text-xl font-semibold mt-5">Pytania:</h2>
+              {!validationErrors.hasAtLeastThreeQuestions &&
+                <p className="text-danger text-md">Quiz musi posiadać co najmniej 3 pytania!</p>
+              }
+            </div>
+            {questions.map((question, qIndex) => (
+              <div key={qIndex} className="mb-4 p-4 ml-16 border border-default-200 rounded-lg">
+                <h3 className="text-lg font-semibold my-3 text-secondary">Pytanie {qIndex + 1}</h3>
+                <Input
+                  errorMessage="Każde pytanie wymaga tytułu, co najmniej 3 odpowiedzi i jednej poprawnej."
+                  isInvalid={validationErrors.questions[qIndex]}
+                  placeholder="Podaj pytanie"
+                  value={question.name}
+                  onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
+                />
+                <h3 className="mt-3">Odpowiedzi:</h3>
+                {question.options.map((option, oIndex) => (
+                  <div key={oIndex} className="flex items-center gap-2 mt-2 pl-8">
+                    <Input
+                    isInvalid={validationErrors.questions[qIndex] && option.name === ""}
+                      placeholder={`Odpowiedź ${oIndex + 1}`}
+                      value={option.name}
+                      onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                    />
+                    <Switch
+                      color="secondary"
+                      isSelected={option.is_correct}
+                      onChange={() => handleCorrectAnswerChange(qIndex, oIndex)}
+                    />
+                    <Button
+                      color="danger"
+                      variant="bordered"
+                      onClick={() => handleDeleteOption(qIndex, oIndex)}
+                    >
+                      <Trash2 size={16}/>
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex flex-row justify-start items-center gap-4 mt-3">
+                <Button
+                  className="mt-2"
+                  color="secondary"
+                  onClick={() => handleAddOption(qIndex)}
+                >
+                  Dodaj Odpowiedź
+                </Button>
+                <Button
+                  className="mt-2"
+                  color="danger"
+                  variant="bordered"
+                  onClick={() => handleDeleteQuestion(qIndex)}
+                >
+                  <Trash2 size={16} /> Usuń pytanie
+                </Button>
+                </div>
+              </div>
+            ))}
+
+            <Button className="mt-4 ml-16" color="secondary" onClick={handleAddQuestion}>
+              Dodaj Pytanie
+            </Button>
+
+            <Button className="mt-6" color="primary" type="submit">
+              {quizId ? "Zaktualizuj Quiz" : "Stwórz Quiz"}
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
+    </div>
   );
 }

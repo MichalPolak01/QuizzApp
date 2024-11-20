@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { BadgePlus, PencilLine, ScrollText } from "lucide-react";
 
-import { Quiz } from "@/app/home/types";
 import { useAuth } from "@/providers/authProvider";
 import QuizCard from "@/components/quiz-card";
 import OptionCard from "@/components/filter-option-card";
+import { Quiz } from "@/config/types";
 
 
 const OPTION_QUIZZES_URL = "api/quizzes";

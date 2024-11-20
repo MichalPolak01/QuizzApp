@@ -12,7 +12,6 @@ import {Navbar} from "@/components/navbar";
 import { AuthProvider } from "@/providers/authProvider";
 
 
-
 export const metadata: Metadata = {
   title: {
     default: siteConfig.name,
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.ico",
   },
 };
 

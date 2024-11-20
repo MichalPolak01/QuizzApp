@@ -6,9 +6,9 @@ import { Link } from "@nextui-org/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@nextui-org/button";
 
-import { Quiz } from "@/app/home/types";
 import { useAuth } from "@/providers/authProvider";
 import { categories } from "@/config/data";
+import { Quiz } from "@/config/types";
 
 
 interface QuizCardProps {
@@ -37,7 +37,6 @@ export default function QuizCard({quiz}: QuizCardProps) {
                             isZoomed
                             alt="Card background"
                             className="object-cover rounded-xl"
-                            // src="https://nextui.org/images/hero-card-complete.jpeg"
                             src={category?.image || "https://nextui.org/images/hero-card-complete.jpeg"} 
                         />
                     </div>

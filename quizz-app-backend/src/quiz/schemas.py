@@ -2,7 +2,7 @@ from datetime import datetime
 from ninja import Schema
 from typing import List, Optional
 from typing import Literal
-from pydantic import EmailStr, Field, field_validator
+from pydantic import Field, field_validator
 
 from authentication.schemas import UserDetailSchema
 
