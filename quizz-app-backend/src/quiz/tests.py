@@ -18,6 +18,8 @@ class TestCreateQuizEndpoint(TestCase):
             password='JohnDoe@!3'
         )
 
+
+
     def get_access_token(self):
         """Helper function to get JWT token for the test user"""
         refresh = RefreshToken.for_user(self.user)
@@ -397,6 +399,13 @@ class TestQuizDetailEndpoint(TestCase):
             email='johndoe@gmail.com',
             password='JohnDoe@!3'
         )
+
+        self.user2 = User.objects.create_user(
+            username='AliceSmith21',
+            email='alicesmith21@gmailcom',
+            password='Alice123$'
+        )
+
         self.quiz = Quiz.objects.create(
             name="Python Basics",
             description="Test your knowledge of Python basics.",
@@ -405,9 +414,9 @@ class TestQuizDetailEndpoint(TestCase):
             created_by=self.user
         )
 
-    def get_access_token(self):
+    def get_access_token(self, user):
         """Helper function to get JWT token for the test user"""
-        refresh = RefreshToken.for_user(self.user)
+        refresh = RefreshToken.for_user(user)
         return str(refresh.access_token)
 
 
@@ -416,7 +425,7 @@ class TestQuizDetailEndpoint(TestCase):
         """Test fetching quiz details by ID"""
 
         # Arrange
-        token = self.get_access_token()
+        token = self.get_access_token(self.user)
 
         # Act
         response = self.client.get(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
@@ -430,7 +439,7 @@ class TestQuizDetailEndpoint(TestCase):
         """Test fetching quiz details with wrong ID"""
 
         # Arrange
-        token = self.get_access_token()
+        token = self.get_access_token(self.user)
 
         # Act
         response = self.client.get(f'/999', headers={'Authorization': f'Bearer {token}'})
@@ -445,7 +454,7 @@ class TestQuizDetailEndpoint(TestCase):
         """Test fetching quiz details without token"""
 
         # Arrange
-        token = self.get_access_token()
+        token = self.get_access_token(self.user)
 
         # Act
         response = self.client.get(f'/{self.quiz.id}')
@@ -453,3 +462,50 @@ class TestQuizDetailEndpoint(TestCase):
         # Assert
         assert response.status_code == 401
         assert response.json()['detail'] == 'Unauthorized'
+
+
+    @pytest.mark.django_db
+    def test_update_quiz_success(self):
+        """Test updating an existing quiz"""
+
+        # Arrange
+        token = self.get_access_token(self.user)
+        payload = {
+            "name": "Python Advanced",
+            "description": "Test your knowledge of advanced Python concepts.",
+            "category": "programming",
+            "is_public": False,
+            "questions": []
+        }
+
+        # Act
+        response = self.client.put(f'/{self.quiz.id}', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 200
+        self.quiz.refresh_from_db()
+        assert self.quiz.name == "Python Advanced"
+        assert not self.quiz.is_public
+
+
+    @pytest.mark.django_db
+    def test_update_quiz_non_author(self):
+        """Test updating quiz by other user"""
+
+        # Arrange
+        token = self.get_access_token(self.user2)
+        payload = {
+            "name": "Python Advanced",
+            "description": "Test your knowledge of advanced Python concepts.",
+            "category": "programming",
+            "is_public": False,
+            "questions": []
+        }
+
+        # Act
+        response = self.client.put(f'/999', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 404
+        self.quiz.refresh_from_db()
+        assert response.json()['message'] == "No quiz with this ID was found for this user."
