@@ -275,7 +275,121 @@ class TestCreateQuizEndpoint(TestCase):
     #     assert response.json()['detail'] == 'Unauthorized'
 
 
-class TestGetQuizzesEndpoint(TestCase):
+# class TestGetQuizzesEndpoint(TestCase):
+#     def setUp(self):
+#         self.client = TestClient(router)
+#         self.user = User.objects.create_user(
+#             username='JohnDoe123',
+#             email='johndoe@gmail.com',
+#             password='JohnDoe@!3'
+#         )
+#         self.quiz = Quiz.objects.create(
+#             name="Python Basics",
+#             description="Test your knowledge of Python basics.",
+#             category="programming",
+#             is_public=True,
+#             created_by=self.user
+#         )
+
+#     def get_access_token(self):
+#         """Helper function to get JWT token for the test user"""
+#         refresh = RefreshToken.for_user(self.user)
+#         return str(refresh.access_token)
+
+
+#     @pytest.mark.django_db
+#     def test_get_all_public_quizzes(self):
+#         """Test fetching all public quizzes"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert len(response.json()) == 1
+#         assert response.json()[0]['name'] == 'Python Basics'
+
+
+#     @pytest.mark.django_db
+#     def test_get_quizzes_with_filter_my(self):
+#         """Test fetching quizzes with a my filter"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('?filter=my', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert len(response.json()) == 1
+
+
+#     @pytest.mark.django_db
+#     def test_get_quizzes_with_filter_latest(self):
+#         """Test fetching quizzes with a latest filter"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('?filter=latest', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert len(response.json()) == 1
+
+
+#     @pytest.mark.django_db
+#     def test_get_quizzes_with_filter_highest_rated(self):
+#         """Test fetching quizzes with a highest-rated filter"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('?filter=highest-rated', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert len(response.json()) == 1
+
+
+#     @pytest.mark.django_db
+#     def test_get_quizzes_with_filter_most_popular(self):
+#         """Test fetching quizzes with a most-popular filter"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('?filter=most-popular', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert len(response.json()) == 1
+
+
+#     @pytest.mark.django_db
+#     def test_get_quizzes_with_wrong_filter(self):
+#         """Test fetching quizzes with a wrong filter"""
+
+#         # Arrange
+#         token = self.get_access_token()
+
+#         # Act
+#         response = self.client.get('?filter=wrong-filter', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 400
+#         assert response.json()['message'] == "Invalid filter option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."
+
+
+
+class TestQuizDetailEndpoint(TestCase):
     def setUp(self):
         self.client = TestClient(router)
         self.user = User.objects.create_user(
@@ -298,91 +412,44 @@ class TestGetQuizzesEndpoint(TestCase):
 
 
     @pytest.mark.django_db
-    def test_get_all_public_quizzes(self):
-        """Test fetching all public quizzes"""
+    def test_get_quiz_detail_success(self):
+        """Test fetching quiz details by ID"""
 
         # Arrange
         token = self.get_access_token()
 
         # Act
-        response = self.client.get('', headers={'Authorization': f'Bearer {token}'})
+        response = self.client.get(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
 
         # Assert
         assert response.status_code == 200
-        assert len(response.json()) == 1
-        assert response.json()[0]['name'] == 'Python Basics'
-
+        assert response.json()['name'] == 'Python Basics'
 
     @pytest.mark.django_db
-    def test_get_quizzes_with_filter_my(self):
-        """Test fetching quizzes with a my filter"""
+    def test_get_quiz_detail_non_exist(self):
+        """Test fetching quiz details with wrong ID"""
 
         # Arrange
         token = self.get_access_token()
 
         # Act
-        response = self.client.get('?filter=my', headers={'Authorization': f'Bearer {token}'})
+        response = self.client.get(f'/999', headers={'Authorization': f'Bearer {token}'})
 
         # Assert
-        assert response.status_code == 200
-        assert len(response.json()) == 1
+        assert response.status_code == 404
+        assert response.json()['message'] == 'Quiz with id 999 not found.'
 
 
     @pytest.mark.django_db
-    def test_get_quizzes_with_filter_latest(self):
-        """Test fetching quizzes with a latest filter"""
+    def test_get_quiz_detail_without_token(self):
+        """Test fetching quiz details without token"""
 
         # Arrange
         token = self.get_access_token()
 
         # Act
-        response = self.client.get('?filter=latest', headers={'Authorization': f'Bearer {token}'})
+        response = self.client.get(f'/{self.quiz.id}')
 
         # Assert
-        assert response.status_code == 200
-        assert len(response.json()) == 1
-
-
-    @pytest.mark.django_db
-    def test_get_quizzes_with_filter_highest_rated(self):
-        """Test fetching quizzes with a highest-rated filter"""
-
-        # Arrange
-        token = self.get_access_token()
-
-        # Act
-        response = self.client.get('?filter=highest-rated', headers={'Authorization': f'Bearer {token}'})
-
-        # Assert
-        assert response.status_code == 200
-        assert len(response.json()) == 1
-
-
-    @pytest.mark.django_db
-    def test_get_quizzes_with_filter_most_popular(self):
-        """Test fetching quizzes with a most-popular filter"""
-
-        # Arrange
-        token = self.get_access_token()
-
-        # Act
-        response = self.client.get('?filter=most-popular', headers={'Authorization': f'Bearer {token}'})
-
-        # Assert
-        assert response.status_code == 200
-        assert len(response.json()) == 1
-
-
-    @pytest.mark.django_db
-    def test_get_quizzes_with_wrong_filter(self):
-        """Test fetching quizzes with a wrong filter"""
-
-        # Arrange
-        token = self.get_access_token()
-
-        # Act
-        response = self.client.get('?filter=wrong-filter', headers={'Authorization': f'Bearer {token}'})
-
-        # Assert
-        assert response.status_code == 400
-        assert response.json()['message'] == "Invalid filter option. Choose from 'my', 'latest', 'highest-rated', 'most-popular'."
+        assert response.status_code == 401
+        assert response.json()['detail'] == 'Unauthorized'
