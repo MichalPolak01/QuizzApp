@@ -20,3 +20,11 @@ class User(AbstractUser):
     def update_last_login(self):
         self.last_login = timezone.now()
         self.save()
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "last_login": self.last_login
+        }
