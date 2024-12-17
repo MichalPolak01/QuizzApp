@@ -1,6 +1,7 @@
 from django.test import TestCase
 from ninja_extra.testing import TestClient
 from ninja_jwt.tokens import RefreshToken
+from django.contrib.auth.hashers import check_password
 import pytest
 
 from authentication.api import router
@@ -443,7 +444,7 @@ class TestUserEndpoints(TestCase):
 
     @pytest.mark.django_db
     def test_update_user_with_duplicate_username(self):
-        """Test updating user's data with duplicate username (test jednostkowy)"""
+        """Test updating user's data with duplicate username"""
 
         # Arrange
         token = self.get_access_token()
@@ -462,7 +463,7 @@ class TestUserEndpoints(TestCase):
     @pytest.mark.django_db
     def test_update_user_with_duplicate_email(self):
 
-        """Test updating user's data with duplicate email (test jednostkowy)"""
+        """Test updating user's data with duplicate email"""
         # Arrange
         token = self.get_access_token()
         payload = {
@@ -475,3 +476,119 @@ class TestUserEndpoints(TestCase):
         # Assert
         assert response.status_code == 400
         assert response.json()['message'] == 'Email is already taken.'
+
+
+
+
+class TestChangePasswordEndpoint(TestCase):
+    def setUp(self):
+        self.client = TestClient(router)
+        self.user = User.objects.create_user(
+            username='JohnDoe123',
+            email='johndoe@gmail.com',
+            password='JohnDoe@!3'
+        )
+
+    def get_access_token(self):
+        """Helper function to get JWT token for the test user"""
+        refresh = RefreshToken.for_user(self.user)
+        return str(refresh.access_token)
+
+    @pytest.mark.django_db
+    def test_change_password_success(self):
+        """Test successful password change"""
+
+        # Arrange
+        token = self.get_access_token()
+        payload = {
+            "old_password": "JohnDoe@!3",
+            "new_password": "NewPassword@123",
+            "confirm_password": "NewPassword@123"
+        }
+
+        # Act
+        response = self.client.post('/change-password', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json()['message'] == 'Password changed successfully.'
+        self.user.refresh_from_db()
+        assert check_password("NewPassword@123", self.user.password) is True
+
+
+    @pytest.mark.django_db
+    def test_change_password_wrong_old_password(self):
+        """Test changing password with incorrect old password"""
+
+        # Arrange
+        token = self.get_access_token()
+        payload = {
+            "old_password": "WrongPassword123",
+            "new_password": "NewPassword@123",
+            "confirm_password": "NewPassword@123"
+        }
+
+        # Act
+        response = self.client.post('/change-password', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 400
+        assert response.json()['message'] == 'Old password incorrect.'
+
+
+    @pytest.mark.django_db
+    def test_change_password_mismatched_new_passwords(self):
+        """Test changing password when new passwords do not match"""
+        # Arrange
+        token = self.get_access_token()
+        payload = {
+            "old_password": "JohnDoe@!3",
+            "new_password": "NewPassword@123",
+            "confirm_password": "NewPassword@124"
+        }
+
+        # Act
+        response = self.client.post('/change-password', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 400
+        assert response.json()['message'] == 'New passwords do not match.'
+
+
+    @pytest.mark.django_db
+    def test_change_password_invalid_new_password(self):
+        """Test changing password with invalid new password"""
+        # Arrange
+        token = self.get_access_token()
+        payload = {
+            "old_password": "JohnDoe@!3",
+            "new_password": "password",
+            "confirm_password": "password"
+        }
+
+        # Act
+        response = self.client.post('/change-password', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 422
+        assert 'Password must contain at least one uppercase letter.' in response.json()['detail'][0]['msg']
+
+    @pytest.mark.django_db
+    def test_change_password_without_token(self):
+        """Test changing password without authentication token"""
+        # Arrange
+        payload = {
+            "old_password": "JohnDoe@!3",
+            "new_password": "NewPassword@123",
+            "confirm_password": "NewPassword@123"
+        }
+
+        # Act
+        response = self.client.post('/change-password', json=payload)
+
+        # Assert
+        assert response.status_code == 401
+        assert response.json()['detail'] == 'Unauthorized'
+
+
+
