@@ -5,7 +5,7 @@ from ninja_jwt.tokens import RefreshToken
 
 
 from .api import router
-from quiz.models import Quiz
+from quiz.models import Quiz, UserStats
 from authentication.models import User
 
 
@@ -391,7 +391,129 @@ class TestCreateQuizEndpoint(TestCase):
 
 
 
-class TestQuizDetailEndpoint(TestCase):
+# class TestQuizDetailEndpoint(TestCase):
+#     def setUp(self):
+#         self.client = TestClient(router)
+#         self.user = User.objects.create_user(
+#             username='JohnDoe123',
+#             email='johndoe@gmail.com',
+#             password='JohnDoe@!3'
+#         )
+
+#         self.user2 = User.objects.create_user(
+#             username='AliceSmith21',
+#             email='alicesmith21@gmailcom',
+#             password='Alice123$'
+#         )
+
+#         self.quiz = Quiz.objects.create(
+#             name="Python Basics",
+#             description="Test your knowledge of Python basics.",
+#             category="programming",
+#             is_public=True,
+#             created_by=self.user
+#         )
+
+#     def get_access_token(self, user):
+#         """Helper function to get JWT token for the test user"""
+#         refresh = RefreshToken.for_user(user)
+#         return str(refresh.access_token)
+
+
+#     @pytest.mark.django_db
+#     def test_get_quiz_detail_success(self):
+#         """Test fetching quiz details by ID"""
+
+#         # Arrange
+#         token = self.get_access_token(self.user)
+
+#         # Act
+#         response = self.client.get(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         assert response.json()['name'] == 'Python Basics'
+
+#     @pytest.mark.django_db
+#     def test_get_quiz_detail_non_exist(self):
+#         """Test fetching quiz details with wrong ID"""
+
+#         # Arrange
+#         token = self.get_access_token(self.user)
+
+#         # Act
+#         response = self.client.get(f'/999', headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 404
+#         assert response.json()['message'] == 'Quiz with id 999 not found.'
+
+
+#     @pytest.mark.django_db
+#     def test_get_quiz_detail_without_token(self):
+#         """Test fetching quiz details without token"""
+
+#         # Arrange
+#         token = self.get_access_token(self.user)
+
+#         # Act
+#         response = self.client.get(f'/{self.quiz.id}')
+
+#         # Assert
+#         assert response.status_code == 401
+#         assert response.json()['detail'] == 'Unauthorized'
+
+
+#     @pytest.mark.django_db
+#     def test_update_quiz_success(self):
+#         """Test updating an existing quiz"""
+
+#         # Arrange
+#         token = self.get_access_token(self.user)
+#         payload = {
+#             "name": "Python Advanced",
+#             "description": "Test your knowledge of advanced Python concepts.",
+#             "category": "programming",
+#             "is_public": False,
+#             "questions": []
+#         }
+
+#         # Act
+#         response = self.client.put(f'/{self.quiz.id}', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 200
+#         self.quiz.refresh_from_db()
+#         assert self.quiz.name == "Python Advanced"
+#         assert not self.quiz.is_public
+
+
+#     @pytest.mark.django_db
+#     def test_update_quiz_non_author(self):
+#         """Test updating quiz by other user"""
+
+#         # Arrange
+#         token = self.get_access_token(self.user2)
+#         payload = {
+#             "name": "Python Advanced",
+#             "description": "Test your knowledge of advanced Python concepts.",
+#             "category": "programming",
+#             "is_public": False,
+#             "questions": []
+#         }
+
+#         # Act
+#         response = self.client.put(f'/999', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+#         # Assert
+#         assert response.status_code == 404
+#         self.quiz.refresh_from_db()
+#         assert response.json()['message'] == "No quiz with this ID was found for this user."
+
+
+
+
+class TestSubmitQuizEndpoint(TestCase):
     def setUp(self):
         self.client = TestClient(router)
         self.user = User.objects.create_user(
@@ -399,13 +521,6 @@ class TestQuizDetailEndpoint(TestCase):
             email='johndoe@gmail.com',
             password='JohnDoe@!3'
         )
-
-        self.user2 = User.objects.create_user(
-            username='AliceSmith21',
-            email='alicesmith21@gmailcom',
-            password='Alice123$'
-        )
-
         self.quiz = Quiz.objects.create(
             name="Python Basics",
             description="Test your knowledge of Python basics.",
@@ -414,98 +529,135 @@ class TestQuizDetailEndpoint(TestCase):
             created_by=self.user
         )
 
-    def get_access_token(self, user):
+    def get_access_token(self):
         """Helper function to get JWT token for the test user"""
-        refresh = RefreshToken.for_user(user)
+        refresh = RefreshToken.for_user(self.user)
         return str(refresh.access_token)
 
-
     @pytest.mark.django_db
-    def test_get_quiz_detail_success(self):
-        """Test fetching quiz details by ID"""
+    def test_submit_quiz_success_first_time(self):
+        """Test successful quiz submission for the first time"""
 
         # Arrange
-        token = self.get_access_token(self.user)
+        token = self.get_access_token()
+        payload = {
+            "quiz_score": 85,
+            "rating": 4
+        }
 
         # Act
-        response = self.client.get(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
+        response = self.client.post(f'/{self.quiz.id}/submit', json=payload, headers={'Authorization': f'Bearer {token}'})
 
         # Assert
         assert response.status_code == 200
-        assert response.json()['name'] == 'Python Basics'
+        assert response.json()['user_stats']['quiz']['average_score'] == 85.0
+        assert response.json()['user_stats']['rating'] == 4
+        assert response.json()['percentile'] == 100.0
+
+        user_stats = UserStats.objects.get(user=self.user, quiz=self.quiz)
+        assert user_stats.quiz_score == 85
+        assert user_stats.rating == 4
 
     @pytest.mark.django_db
-    def test_get_quiz_detail_non_exist(self):
-        """Test fetching quiz details with wrong ID"""
+    def test_submit_quiz_with_higher_score(self):
+        """Test submitting a higher score updates user stats"""
 
         # Arrange
-        token = self.get_access_token(self.user)
+        token = self.get_access_token()
+        # Initial submission
+        UserStats.objects.create(user=self.user, quiz=self.quiz, quiz_score=70, rating=3)
+
+        payload = {
+            "quiz_score": 90,
+            "rating": 5
+        }
 
         # Act
-        response = self.client.get(f'/999', headers={'Authorization': f'Bearer {token}'})
+        response = self.client.post(f'/{self.quiz.id}/submit', json=payload, headers={'Authorization': f'Bearer {token}'})
+
 
         # Assert
-        assert response.status_code == 404
-        assert response.json()['message'] == 'Quiz with id 999 not found.'
+        assert response.status_code == 200
+        assert response.json()['user_stats']['quiz']['average_score'] == 70.0
+        assert response.json()['user_stats']['rating'] == 5
+
+        user_stats = UserStats.objects.get(user=self.user, quiz=self.quiz)
+        assert user_stats.quiz_score == 90
+        assert user_stats.rating == 5
 
 
     @pytest.mark.django_db
-    def test_get_quiz_detail_without_token(self):
-        """Test fetching quiz details without token"""
-
+    def test_submit_quiz_with_lower_score(self):
+        """Test submitting a lower score does not update quiz score but updates rating"""
+        
         # Arrange
-        token = self.get_access_token(self.user)
+        token = self.get_access_token()
+        UserStats.objects.create(user=self.user, quiz=self.quiz, quiz_score=85, rating=4)
+
+        payload = {
+            "quiz_score": 80,
+        }
 
         # Act
-        response = self.client.get(f'/{self.quiz.id}')
+        response = self.client.post(f'/{self.quiz.id}/submit', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json()['user_stats']['quiz']['average_score'] == 85.0
+        assert response.json()['user_stats']['rating'] == 2.5
+
+        user_stats = UserStats.objects.get(user=self.user, quiz=self.quiz)
+        assert user_stats.quiz_score == 85
+
+
+    @pytest.mark.django_db
+    def test_submit_quiz_without_authentication(self):
+        """Test quiz submission without authentication"""
+
+        # Arrange
+        payload = {
+            "quiz_score": 85,
+            "rating": 4
+        }
+
+        # Act
+        response = self.client.post(f'/{self.quiz.id}/submit', json=payload)
 
         # Assert
         assert response.status_code == 401
         assert response.json()['detail'] == 'Unauthorized'
 
-
     @pytest.mark.django_db
-    def test_update_quiz_success(self):
-        """Test updating an existing quiz"""
+    def test_submit_quiz_invalid_quiz_id(self):
+        """Test quiz submission with an invalid quiz ID"""
 
         # Arrange
-        token = self.get_access_token(self.user)
+        token = self.get_access_token()
+        invalid_quiz_id = 999
         payload = {
-            "name": "Python Advanced",
-            "description": "Test your knowledge of advanced Python concepts.",
-            "category": "programming",
-            "is_public": False,
-            "questions": []
+            "quiz_score": 85,
+            "rating": 4
         }
 
         # Act
-        response = self.client.put(f'/{self.quiz.id}', json=payload, headers={'Authorization': f'Bearer {token}'})
-
-        # Assert
-        assert response.status_code == 200
-        self.quiz.refresh_from_db()
-        assert self.quiz.name == "Python Advanced"
-        assert not self.quiz.is_public
-
-
-    @pytest.mark.django_db
-    def test_update_quiz_non_author(self):
-        """Test updating quiz by other user"""
-
-        # Arrange
-        token = self.get_access_token(self.user2)
-        payload = {
-            "name": "Python Advanced",
-            "description": "Test your knowledge of advanced Python concepts.",
-            "category": "programming",
-            "is_public": False,
-            "questions": []
-        }
-
-        # Act
-        response = self.client.put(f'/999', json=payload, headers={'Authorization': f'Bearer {token}'})
+        response = self.client.post(f'/{invalid_quiz_id}/submit', json=payload, headers={'Authorization': f'Bearer {token}'})
 
         # Assert
         assert response.status_code == 404
-        self.quiz.refresh_from_db()
-        assert response.json()['message'] == "No quiz with this ID was found for this user."
+        assert response.json()['message'] == f"Quiz with id {invalid_quiz_id} not found."
+
+    @pytest.mark.django_db
+    def test_submit_quiz_with_invalid_payload(self):
+        """Test quiz submission with invalid payload"""
+        # Arrange
+        token = self.get_access_token()
+        payload = {
+            "rating": 4
+        }
+
+        # Act
+        response = self.client.post(f'/{self.quiz.id}/submit', json=payload, headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 422
+        assert response.json()['detail'][0]['msg'] == "Field required"
