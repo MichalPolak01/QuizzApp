@@ -19,6 +19,14 @@ services:
       - DJANGO_SECRET_KEY=G8oCsQIVa9mW-qH6sR57U3zJgc1WysgAcCEOx-fwJ7eK3wgG3xxb1orMQDBTgTj3sM2VKHw_
       - DJANGO_DEBUG=1
       - DJANGO_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+      # Database
+      - DATABASE_NAME=database
+      - DATABASE_USER=app_user
+      - DATABASE_PASSWORD=securepassword123
+      - DATABASE_HOST=212.227.96.214
+      - DATABASE_PORT=5432
+      - DATABASE_SCHEMA=quizz_app
     depends_on:
       - frontend
 

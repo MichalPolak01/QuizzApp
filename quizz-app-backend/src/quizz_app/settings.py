@@ -98,17 +98,17 @@ WSGI_APPLICATION = "quizz_app.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'database',
-        'USER': 'app_user',
-        'PASSWORD': 'securepassword123',
-        'HOST': '212.227.96.214',
-        'PORT': '5432',
+        'NAME': config("DATABASE_NAME", cast=str),
+        'USER': config("DATABASE_USER", cast=str),
+        'PASSWORD': config("DATABASE_PASSWORD", cast=str),
+        'HOST': config("DATABASE_HOST", cast=str),
+        'PORT': config("DATABASE_PORT", cast=str),
         'OPTIONS': {
             'options': '-c search_path=quizz_app'
+            # 'options': f'-c search_path={config("DATABASE_SCHEMA", cast=str)}'
         },
     }
 }
