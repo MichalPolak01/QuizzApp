@@ -12,7 +12,7 @@ services:
       - ./quizz-app-backend/src:/app/src
     environment:
       - PYTHONUNBUFFERED=1
-      - OPENAI_API_KEY=sk-_-PYofBvKLN8Gh4o6P8ek6_Zaj-bNhjwMpSVB-ZeqbT3BlbkFJGUQSvNQdpH5mf3I56SVL8MZIYGPHsJxcqo1OAt4EQA
+      - OPENAI_API_KEY=***
       - OPEN_API_MODEL=gpt-4o-mini
 
       # Settings
