@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 
 import ApiProxy from "../../proxy";
 
-const DJANGO_API_ACCOUNT_SETTINGS_URL = "http://127.0.0.1:8000/api/auth/user"
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
+
+const DJANGO_API_ACCOUNT_SETTINGS_URL = `${DJANGO_API_ENDPOINT}/auth/user`;
 
 
 export async function PATCH(request: Request) {

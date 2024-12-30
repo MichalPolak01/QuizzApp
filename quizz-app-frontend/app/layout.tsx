@@ -3,12 +3,13 @@ import { Metadata, Viewport } from "next";
 import { Toaster } from "react-hot-toast";
 import clsx from "clsx";
 import { Link } from "@nextui-org/link";
+import { Suspense } from "react";
 
 import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import {Navbar} from "@/components/navbar";
+import { Navbar } from "@/components/navbar";
 import { AuthProvider } from "@/providers/authProvider";
 
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   icons: {
-    icon: "/icon.ico",
+    icon: "/graduation-cap.ico",
   },
 };
 
@@ -44,7 +45,8 @@ export default function RootLayout({
           fontSans.variable,
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
             <AuthProvider>
               <div className="relative flex flex-col h-screen">
                 <Navbar />
@@ -68,8 +70,9 @@ export default function RootLayout({
                   </Link>
                 </footer>
               </div>
-          </AuthProvider>
-        </Providers>
+            </AuthProvider>
+          </Providers>
+        </Suspense>
       </body>
     </html>
   );

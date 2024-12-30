@@ -4,7 +4,9 @@ import { NextResponse } from "next/server"
 
 import ApiProxy from "../../proxy";
 
-const DJANGO_API_CHANGE_PASSWORD_URL = "http://127.0.0.1:8000/api/auth/change-password"
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
+
+const DJANGO_API_CHANGE_PASSWORD_URL = `${DJANGO_API_ENDPOINT}/auth/change-password`;
 
 
 export async function POST(request: Request) {

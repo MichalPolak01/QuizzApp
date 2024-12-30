@@ -1,14 +1,20 @@
 import { Avatar } from "@nextui-org/avatar";
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@nextui-org/dropdown";
+import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/providers/authProvider";
 
 
 export default function NavbarAccount() {
   const auth = useAuth();
+  const router = useRouter();
 
   const handleLogout = () => {
     auth.logout();
+  }
+
+  const handleShowProfile = () => {
+    router.push('/profile')
   }
 
   return (
@@ -24,10 +30,10 @@ export default function NavbarAccount() {
         </DropdownTrigger>
         <DropdownMenu aria-label="Profile Actions" variant="flat">
           <DropdownItem key="profile" className="h-14 gap-2">
-            <p className="font-semibold">Zalogowano jako</p>
-            <p className="font-semibold">{auth.username}</p>
+            <p className="font-semibold">Zalogowano jako:</p>
+            <p className="font-semibold text-primary">{auth.username}</p>
           </DropdownItem>
-          <DropdownItem key="settings" href="/profile">
+          <DropdownItem key="settings"onClick={() => handleShowProfile()}>
             Ustawienia
           </DropdownItem>
           <DropdownItem key="logout" color="danger" onClick={handleLogout}>

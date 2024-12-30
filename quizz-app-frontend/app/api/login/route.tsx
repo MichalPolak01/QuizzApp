@@ -5,9 +5,10 @@ import { NextResponse } from "next/server"
 import ApiProxy from "../proxy";
 
 import { setRefreshToken, setToken } from "@/lib/authServer";
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
 
 
-const DJANGO_API_LOGIN_URL = "http://127.0.0.1:8000/api/auth/login"
+const DJANGO_API_LOGIN_URL = `${DJANGO_API_ENDPOINT}/auth/login`;
 
 interface LoginResponse {
     access: string;

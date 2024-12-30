@@ -45,6 +45,9 @@ class QuizDetailSchema(QuizSchema):
 class QuizDetailResponseSchema(QuizResponseSchema):
     questions: List[QuestionSchema]
 
+class OpenAiResponseSchema(Schema):
+    questions: List[QuestionSchema]
+
 class UserStatsSchema(Schema):
     user: UserDetailSchema
     quiz: QuizResponseSchema

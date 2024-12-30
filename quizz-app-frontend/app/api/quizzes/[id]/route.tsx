@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 
 import ApiProxy from "../../proxy";
 
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
 
-const DJANGO_API_GET_QUIZ_URL = "http://127.0.0.1:8000/api/quizzes/"
+const DJANGO_API_GET_QUIZ_URL = `${DJANGO_API_ENDPOINT}/quizzes/`;
 
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {

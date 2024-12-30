@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-6(ptn$25ompm8+!d3=*mc)qcakb-y#xn(we8pqlyt@xe*ljy5d"
+SECRET_KEY = config("DJANGO_SECRET_KEY", cast=str)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DJANGO_DEBUG", cast=bool, default=False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -61,17 +62,17 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-CORS_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+
+CORS_ALLOWED_ORIGINS = []
+CORS_TRUSTED_ORIGINS = []
+
+ENV_CORS_ALLOWED_ORIGINS = config("DJANGO_CORS_ALLOWED_ORIGINS", cast=str, default="")
+for origin in ENV_CORS_ALLOWED_ORIGINS.split(","):
+    CORS_ALLOWED_ORIGINS.append(f"{origin}".strip().lower())
+    CORS_TRUSTED_ORIGINS.append(f"{origin}".strip().lower())
+
 
 AUTH_USER_MODEL = 'authentication.User'
-
 
 ROOT_URLCONF = "quizz_app.urls"
 
@@ -98,9 +99,17 @@ WSGI_APPLICATION = "quizz_app.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': config("DATABASE_NAME", cast=str),
+        'USER': config("DATABASE_USER", cast=str),
+        'PASSWORD': config("DATABASE_PASSWORD", cast=str),
+        'HOST': config("DATABASE_HOST", cast=str),
+        'PORT': config("DATABASE_PORT", cast=str),
+        'OPTIONS': {
+            'options': '-c search_path=quizz_app'
+            # 'options': f'-c search_path={config("DATABASE_SCHEMA", cast=str)}'
+        },
     }
 }
 
