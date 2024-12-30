@@ -3,7 +3,7 @@
 
 ## Wykonanie: **Michał Polak**
 
-## Temat projkektu: **Implementacja testów w aplikacji internetowej z quizami**
+### Temat projektu: **Implementacja testów w aplikacji internetowej z quizami**
 
 ## Opis projektu
 
@@ -86,11 +86,21 @@ Lokalizacja: `/quizz-app-backend/src/quiz/tests.py`
 | Test051 | test_submit_quiz_without_authentication   | Test przesyłania wyniku quizu bez podania tokena uwierzytelniającego  | Test jednostokwy  | klasa: TestSubmitQuizEndpoint (linia 609)   |
 | Test052 | test_submit_quiz_invalid_quiz_id          | Test aktualizacji wyniku z nieistniejącym ID                          | Test jednostokwy  | klasa: TestSubmitQuizEndpoint (linia 626)   |
 | Test053 | test_submit_quiz_with_invalid_payload     | Test aktualizacji wyniku z nieodpowiednim przesłanym schematem danych | Test jednostokwy  | klasa: TestSubmitQuizEndpoint (linia 645)   |
-
+<br>
 
 # Dokumentacja API
 
-### ...
+Dokumentacja znajduje się na Swagger w wersji trial, więc nie wiadomo czy będzie jeszcze aktywna.
+https://app.swaggerhub.com/apis/POLAKMICHAL3008_1/QuizzApp/1.0.0
+
+Po uruchomieniu projektu dokumentacja zanjduje się pod adresem:
+http://127.0.0.1:8000/api/docs# 
+
+Przedstawienie graficzne:<br>
+
+![API for authentication](./documentation/images/authentication_api.png)
+
+![API for quiz](./documentation/images/quiz_api.png)
 
 # Przypadki testowe dla testera manualnego
 

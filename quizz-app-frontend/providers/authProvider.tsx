@@ -29,24 +29,30 @@ interface AuthProviderProps {
     children: React.ReactNode
 }
 
-export function AuthProvider({children}: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState("");
     const [authToken, setAuthToken] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
 
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        
+        setIsClient(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isClient) return;
+
         const checkToken = async () => {
             const token = localStorage.getItem(LOCAL_STORAGE_KEY);
 
             if (token) {
                 if (isTokenExpired(token)) {
                     loginRequired();
-                    
+
                     return;
                 }
 
@@ -54,7 +60,7 @@ export function AuthProvider({children}: AuthProviderProps) {
                 setAuthToken(token);
             } else {
                 loginRequired();
-                    
+
                 return;
             }
 
@@ -62,13 +68,15 @@ export function AuthProvider({children}: AuthProviderProps) {
 
             if (storedUsername) {
                 setUsername(storedUsername);
-            }            
-        }
+            }
+        };
 
         checkToken();
-    }, []);
+    }, [isClient]);
 
-    const login = async(username?: string, authToken?: string, refreshToken?: string) => {
+    const login = (username?: string, authToken?: string, refreshToken?: string) => {
+        if (!isClient) return;
+
         if (authToken) {
             setToken(authToken);
             setAuthToken(authToken);
@@ -86,7 +94,6 @@ export function AuthProvider({children}: AuthProviderProps) {
             setUsername("");
         }
 
-
         const nextUrl = searchParams.get("next");
         const invalidNextUrls = ["/login", "/logout", "/register"];
         const nextValidUrl = nextUrl && nextUrl.startsWith("/") && !invalidNextUrls.includes(nextUrl);
@@ -96,18 +103,22 @@ export function AuthProvider({children}: AuthProviderProps) {
         } else {
             router.replace(LOGIN_REDIRECT_URL);
         }
-    }
+    };
 
     const logout = () => {
+        if (!isClient) return;
+
         setIsAuthenticated(false);
         deleteTokens();
         deleteServerTokens();
         localStorage.removeItem(LOCAL_USERNAME_KEY);
-        
+
         router.replace(LOGOUT_REDIRECT_URL);
-    }
+    };
 
     const loginRequired = () => {
+        if (!isClient) return;
+
         setIsAuthenticated(false);
         deleteTokens();
         deleteServerTokens();
@@ -115,7 +126,7 @@ export function AuthProvider({children}: AuthProviderProps) {
         const loginWithNextUrl = `${LOGIN_REQUIRED_URL}?next=${pathname}`;
 
         router.replace(loginWithNextUrl);
-    }
+    };
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, authToken, login, logout, loginRequired, username }}>

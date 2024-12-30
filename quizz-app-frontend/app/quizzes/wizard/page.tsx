@@ -330,8 +330,9 @@ const handleFormChange = (event: { target: { name: string; value: string } }) =>
   return (
     <div className="relative">
       {isGenerating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex flex-row gap-4 items-center justify-center bg-black/70">
           <Spinner color="primary" size="lg" />
+          <p className="text-md text-primary">Generowanie pytań...</p>
         </div>
       )}
       <Card className="p-10">

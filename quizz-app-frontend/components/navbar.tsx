@@ -12,17 +12,17 @@ import { Link } from "@nextui-org/link";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { usePathname } from "next/navigation";
 
 import NavbarAccount from "./NavAccountDropdown";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  Logo,
-} from "@/components/icons";
+import { Logo } from "@/components/icons";
 import { useAuth } from "@/providers/authProvider";
 
 export const Navbar = () => {
+  const pathname = usePathname()
   const auth = useAuth();
 
   return (
@@ -41,9 +41,11 @@ export const Navbar = () => {
                 <NextLink
                   className={clsx(
                     linkStyles({ color: "foreground" }),
-                    "data-[active=true]:text-primary data-[active=true]:font-medium",
+                    {
+                      "text-primary font-medium": pathname.startsWith(item.href),
+                      "text-default-500": !pathname.startsWith(item.href),
+                    }
                   )}
-                  color="foreground"
                   href={item.href}
                 >
                   {item.label}
@@ -56,7 +58,7 @@ export const Navbar = () => {
 
       <NavbarContent className="hidden sm:flex basis-1/5 sm:basis-full" justify="end">
         <ThemeSwitch />
-        {auth.isAuthenticated?
+        {auth.isAuthenticated ?
           <NavbarAccount />
           :
           siteConfig.navMenuAuth.map((item) => (
@@ -64,7 +66,10 @@ export const Navbar = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium font-medium",
+                  {
+                    "text-primary font-medium": pathname.startsWith(item.href),
+                    "text-default-500": !pathname.startsWith(item.href),
+                  }
                 )}
                 color="foreground"
                 href={item.href}
@@ -74,7 +79,7 @@ export const Navbar = () => {
             </NavbarItem>
           ))
         }
-        
+
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -86,22 +91,52 @@ export const Navbar = () => {
         <div className="mx-4 mt-2 flex flex-col gap-2">
           {siteConfig.navMenuItems.map((item, index) => (
             (item.authRequired && auth.isAuthenticated) && (
-            <NavbarMenuItem key={`${item}-${index}`}>
+              <NavbarMenuItem key={`${item}-${index}`}>
+                <Link
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    {
+                      "text-primary font-medium": pathname.startsWith(item.href),
+                      "text-default-500": !pathname.startsWith(item.href),
+                    }
+                  )}
+                  href={item.href}
+                  size="lg"
+                >
+                  {item.label}
+                </Link>
+              </NavbarMenuItem>
+            )))}
+          {auth.isAuthenticated &&
+            <NavbarMenuItem >
               <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
-                href={item.href}
+                color="danger"
                 size="lg"
-              >
-                {item.label}
+                onClick={() => auth.logout()}>
+                Wyloguj się
               </Link>
             </NavbarMenuItem>
-          )))}
+          }
+
+          {!auth.isAuthenticated &&
+            siteConfig.navMenuAuth.map((item) => (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    {
+                      "text-primary font-medium": pathname.startsWith(item.href),
+                      "text-default-500": !pathname.startsWith(item.href),
+                    }
+                  )}
+                  color="foreground"
+                  href={item.href}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
+            ))
+          }
         </div>
       </NavbarMenu>
     </NextUINavbar>

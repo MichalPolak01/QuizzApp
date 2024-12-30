@@ -18,8 +18,6 @@ class TestCreateQuizEndpoint(TestCase):
             password='JohnDoe@!3'
         )
 
-
-
     def get_access_token(self):
         """Helper function to get JWT token for the test user"""
         refresh = RefreshToken.for_user(self.user)
@@ -217,7 +215,6 @@ class TestCreateQuizEndpoint(TestCase):
         assert response.status_code == 422
         assert response.json()['detail'][0]['msg'] == "Field required"
         assert 'question' and 'option' and 'name' in response.json()['detail'][0]['loc']
-
 
 
 class TestGenerateQuizEndpoint(TestCase):
@@ -509,8 +506,6 @@ class TestQuizDetailEndpoint(TestCase):
         assert response.status_code == 404
         self.quiz.refresh_from_db()
         assert response.json()['message'] == "No quiz with this ID was found for this user."
-
-
 
 
 class TestSubmitQuizEndpoint(TestCase):

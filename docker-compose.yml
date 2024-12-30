@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./quizz-app-backend
+      dockerfile: Dockerfile
+    container_name: quizz-app-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./quizz-app-backend/src:/app/src
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OPENAI_API_KEY=sk-_-PYofBvKLN8Gh4o6P8ek6_Zaj-bNhjwMpSVB-ZeqbT3BlbkFJGUQSvNQdpH5mf3I56SVL8MZIYGPHsJxcqo1OAt4EQA
+      - OPEN_API_MODEL=gpt-4o-mini
+
+      # Settings
+      - DJANGO_SECRET_KEY=G8oCsQIVa9mW-qH6sR57U3zJgc1WysgAcCEOx-fwJ7eK3wgG3xxb1orMQDBTgTj3sM2VKHw_
+      - DJANGO_DEBUG=1
+      - DJANGO_CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    depends_on:
+      - frontend
+
+  frontend:
+    build:
+      context: ./quizz-app-frontend
+      dockerfile: Dockerfile
+    container_name: quizz-app-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DJANGO_URL=http://backend:8000

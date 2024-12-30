@@ -43,8 +43,8 @@ export default function QuizCard({quiz}: QuizCardProps) {
                     <div className="px-4 w-3/5 flex flex-col justify-between">
                         <div className="flex flex-col">
                             <h4 className="font-bold text-large">{quiz.name}</h4>
-                            <div className="flex flex-row justify-between items-center">
-                                <small className="text-default-500">Created by: {quiz.created_by.username}</small>
+                            <div className="flex flex-row justify-between items-center gap-1 mt-1">
+                                <small className="text-default-500 text-xs">Created by: {quiz.created_by.username}</small>
                                 {quiz.created_by.username === auth.username &&
                                     <Button className="hover:scale-110" color="primary" size="sm" onClick={handleEditQuiz}>
                                         <div className="flex items-center text-sm gap-1"><Pencil />Edit</div>

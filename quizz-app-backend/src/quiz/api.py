@@ -11,7 +11,7 @@ from authentication.models import User
 from .models import Quiz, Question, Option, UserStats
 
 from quizz_app.schemas import MessageSchema
-from .schemas import QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema, QuizSubmitSchema, UserStatsResponseSchema, QuizSchema
+from .schemas import OpenAiResponseSchema, QuizDetailSchema, QuizDetailResponseSchema, QuizResponseSchema, QuizSubmitSchema, UserStatsResponseSchema, QuizSchema
 
 
 router = Router()
@@ -54,13 +54,13 @@ def create_quiz(request, payload: QuizSchema):
 
         generated_quiz = generate_quiz(lesson_name=payload.name, lesson_description=payload.description, language="polish")
 
-        for question_data in generated_quiz["questions"]:
-            question = Question.objects.create(quiz=quiz, name=question_data["question"])
-            for option_data in question_data["options"]:
+        for question_data in generated_quiz.questions:
+            question = Question.objects.create(quiz=quiz, name=question_data.name)
+            for option_data in question_data.options:
                 Option.objects.create(
-                    question=question, 
-                    name=option_data["option"], 
-                    is_correct=option_data["is_correct"]
+                    question=question,
+                    name=option_data.name,
+                    is_correct=option_data.is_correct
                 )
 
         return 201, quiz
@@ -181,18 +181,17 @@ def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
         return 500, {"message": "An unexpected error occurred."}
 
 
-def generate_quiz(lesson_name: str, lesson_description: str, language: str = "polish") -> dict:
+def generate_quiz(lesson_name: str, lesson_description: str, language: str = "polish") -> OpenAiResponseSchema:
     try:
         client = OpenAI(api_key=config('OPENAI_API_KEY', cast=str))
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+
+        response = client.beta.chat.completions.parse(
+            model=config("OPEN_API_MODEL", cast=str),
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        f"You are a quiz generator. Respond in JSON format with a single key 'questions', containing a list of questions. "
-                        f"Each question should have the keys 'question' (the main quiz question) and 'options' (a list of answer options). "
-                        f"Each item in 'options' should be an object with 'option' (text of the answer) and 'is_correct' (boolean indicating if this option is correct). "
+                        f"You are a quiz generator. Respond in a structured JSON format that adheres strictly to the schema provided. "
                         f"Use {language} for all content."
                     )
                 },
@@ -200,37 +199,17 @@ def generate_quiz(lesson_name: str, lesson_description: str, language: str = "po
                     "role": "user",
                     "content": (
                         f"Generate a multiple-choice quiz for a lesson titled '{lesson_name}' described as '{lesson_description}'. "
-                        "The quiz should include 5 to 10 multiple-choice questions, each with at least three answer options! "
-                        "Each question should be single-choice, with exactly one correct answer and at least two incorrect answers. "
-                        "The response should be a JSON object with the following structure:"
-                        "{"
-                        "  'questions': ["
-                        "    {"
-                        "      'question': 'The main quiz question as a string.',"
-                        "      'options': ["
-                        "        {'option': 'Answer text 1', 'is_correct': true or false},"
-                        "        {'option': 'Answer text 2', 'is_correct': true or false},"
-                        "        {'option': 'Answer text 3', 'is_correct': true or false},"
-                        "        {'option': 'Answer text 4', 'is_correct': true or false}"
-                        "      ]"
-                        "    }"
-                        "  ]"
-                        "}"
-                        "Ensure the JSON structure is valid, adheres to this format exactly, and contains no additional text or explanations. "
-                        "Each question should be relevant to the lesson's title and description, and there should be exactly one correct answer per question, with at least three options."
+                        "The quiz should include 5 to 10 multiple-choice questions. "
+                        "Each question should have exactly one correct answer and at least two incorrect answers. "
+                        "The response must follow the schema provided for validation."
                     )
                 }
-            ]
+            ],
+            response_format=OpenAiResponseSchema
         )
-        
-        result = response.choices[0].message.content
-        
-        try:
-            parsed_result = json.loads(result)
-            return parsed_result
-        except json.JSONDecodeError as e:
-            return [{"error": "Model did not return valid JSON format", "response": result}]
+
+        parsed_response = response.choices[0].message.parsed
+        return parsed_response
+
     except Exception as e:
-        raise
-
-
+        raise Exception(f"Error while generating the quiz: {str(e)}")

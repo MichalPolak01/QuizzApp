@@ -7,24 +7,38 @@ const TOKEN_REFRESH_NAME = "auth-refresh-token";
 
 
 export function getToken(): string | null {
-    return localStorage.getItem(TOKEN_NAME);
+    if (typeof window !== "undefined") {
+        return localStorage.getItem(TOKEN_NAME);
+    }
+
+    return null;
 }
 
 export function setToken(authToken: string): void {
-    localStorage.setItem(TOKEN_NAME, authToken);
+    if (typeof window !== "undefined") {
+        localStorage.setItem(TOKEN_NAME, authToken);
+    }
 }
 
 export function getRefreshToken(): string | null {
-    return localStorage.getItem(TOKEN_REFRESH_NAME);
+    if (typeof window !== "undefined") {
+        return localStorage.getItem(TOKEN_REFRESH_NAME);
+    }
+
+    return null;
 }
 
 export function setRefreshToken(authRefreshToken: string): void {
-    localStorage.setItem(TOKEN_REFRESH_NAME, authRefreshToken);
-} 
+    if (typeof window !== "undefined") {
+        localStorage.setItem(TOKEN_REFRESH_NAME, authRefreshToken);
+    }
+}
 
 export function deleteTokens(): void {
-    localStorage.removeItem(TOKEN_NAME);
-    localStorage.removeItem(TOKEN_REFRESH_NAME);
+    if (typeof window !== "undefined") {
+        localStorage.removeItem(TOKEN_NAME);
+        localStorage.removeItem(TOKEN_REFRESH_NAME);
+    }
 }
 
 export function isTokenExpired(token: string): boolean {

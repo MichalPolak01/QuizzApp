@@ -50,11 +50,6 @@ export const siteConfig = {
       label: "Rejestracja",
       href: "/register",
       authRequired: false
-    },
-    {
-      label: "Logout",
-      href: "/logout",
-      authRequired: true
     }
   ],
   navMenuAuth: [

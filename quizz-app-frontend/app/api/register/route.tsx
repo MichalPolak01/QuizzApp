@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 import ApiProxy from "../proxy";
 
-const DJANGO_API_REGISTER_URL = "http://127.0.0.1:8000/api/auth/register"
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
+
+const DJANGO_API_REGISTER_URL = `${DJANGO_API_ENDPOINT}/auth/register`;
+
 
 export async function POST(request: Request) {
     const requestData = await request.json();

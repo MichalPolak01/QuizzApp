@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 import ApiProxy from "../../proxy";
 
-const DJANGO_API_CREATE_QUIZ_URL = "http://127.0.0.1:8000/api/quizzes/"
+import { DJANGO_API_ENDPOINT } from "@/config/defaults";
+
+const DJANGO_API_CREATE_QUIZ_URL = `${DJANGO_API_ENDPOINT}/quizzes/`;
+
 
 export async function PUT(request: Request) {
     const { searchParams } = new URL(request.url);
