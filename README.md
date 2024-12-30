@@ -64,7 +64,7 @@ W projekcie przeprowadzono szereg testów jednostkowych, integracyjnych oraz man
 - **Node.js** w wersji `20.13.1`
 - **npm** lub **yarn** (zainstalowany wraz z Node.js)
 - **Virtualenv** dla izolacji środowiska Python
-- **Zmień nazwę pliku `.env.sample` na `.env`**, aby poprawnie ustawić wymagane zmienne środowiskowe.**
+- **Zmień nazwę pliku znajdującego się w folderze `quizz-app-backend` z `.env.sample` na `.env`**, aby poprawnie ustawić wymagane zmienne środowiskowe.
 
 ### Uruchamianie Backendu
 
