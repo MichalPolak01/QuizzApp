@@ -20,7 +20,7 @@ export default function Page() {
                 <div className="absolute inset-0 bg-black opacity-40" />
 
                 <h1 className="relative z-10 text-white text-4xl font-semibold text-center italic">
-                    Odkrywaj, ucz się i spędzaj miło czas
+                    Odkrywaj, ucz się i spędzaj miło czas!
                 </h1>
             </div>
 

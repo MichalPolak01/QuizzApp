@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import sys
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
@@ -106,7 +107,7 @@ DATABASES = {
         'PASSWORD': config("DATABASE_PASSWORD", cast=str),
         'HOST': config("DATABASE_HOST", cast=str),
         'PORT': config("DATABASE_PORT", cast=str),
-        'OPTIONS': {
+        'OPTIONS': {} if 'test' in sys.argv else {
             'options': '-c search_path=quizz_app'
             # 'options': f'-c search_path={config("DATABASE_SCHEMA", cast=str)}'
         },

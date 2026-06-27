@@ -10,11 +10,11 @@ export default function Home() {
     <div className=" w-full h-full">
       <div className="absolute inset-0 w-full h-full z-0">
         <Image 
+          fill
           priority 
           alt="Tło aplikacji QuizzApp" 
           className="object-cover w-full h-full" 
-          layout="fill" 
-          src="/images/background.jpg" 
+          src="/images/background.jpg"
         />
         <div className="absolute inset-0 bg-black bg-opacity-40 z-5"/>
       </div>

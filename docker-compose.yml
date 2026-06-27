@@ -1,6 +1,17 @@
-version: '3.9'
-
 services:
+  db:
+    image: postgres:16
+    container_name: quizz-app-db
+    environment:
+      - POSTGRES_DB=database
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=securepassword123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
   backend:
     build:
       context: ./quizz-app-backend
@@ -24,19 +35,24 @@ services:
       - DATABASE_NAME=database
       - DATABASE_USER=app_user
       - DATABASE_PASSWORD=securepassword123
-      - DATABASE_HOST=212.227.96.214
+      - DATABASE_HOST=db
       - DATABASE_PORT=5432
       - DATABASE_SCHEMA=quizz_app
     depends_on:
-      - frontend
+      - db
 
   frontend:
-    build:
-      context: ./quizz-app-frontend
-      dockerfile: Dockerfile
+    image: node:20
     container_name: quizz-app-frontend
+    working_dir: /app
+    command: sh -c "npm install --force && npm run dev"
     ports:
       - "3000:3000"
+    volumes:
+      - ./quizz-app-frontend:/app
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - DJANGO_URL=http://backend:8000
+
+volumes:
+  postgres_data:

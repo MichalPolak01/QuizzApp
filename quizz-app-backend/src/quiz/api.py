@@ -143,6 +143,20 @@ def update_quiz(request, payload: QuizDetailSchema, quiz_id: int):
         return 500, {"message": "An unexpected error occurred."}
     
 
+@router.delete('/{quiz_id}', response={200: MessageSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
+def delete_quiz(request, quiz_id: int):
+    try:
+        quiz = Quiz.objects.get(id=quiz_id, created_by=request.user, is_removed=False)
+        quiz.is_removed = True
+        quiz.save()
+        return 200, {"message": "Quiz deleted successfully."}
+    except Quiz.DoesNotExist:
+        return 404, {"message": f"No quiz with this ID was found for this user."}
+    except Exception as e:
+        traceback.print_exc()
+        return 500, {"message": "An unexpected error occurred."}
+
+
 @router.post('/{quiz_id}/submit', response={200: UserStatsResponseSchema, 404: MessageSchema, 500: MessageSchema}, auth=helpers.auth_required)
 def submit_quiz(request, payload: QuizSubmitSchema, quiz_id: int):
     try:

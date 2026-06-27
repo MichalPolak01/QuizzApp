@@ -70,7 +70,7 @@ class UserStats(models.Model):
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user_stats.user} - {self.question} - Answered: {self.selected_option.name}"
+        return f"{self.user} - {self.quiz} - Score: {self.quiz_score}"
 
 
 @receiver(post_save, sender=UserStats)

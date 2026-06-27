@@ -508,6 +508,106 @@ class TestQuizDetailEndpoint(TestCase):
         assert response.json()['message'] == "No quiz with this ID was found for this user."
 
 
+class TestDeleteQuizEndpoint(TestCase):
+    def setUp(self):
+        self.client = TestClient(router)
+        self.user = User.objects.create_user(
+            username='JohnDoe123',
+            email='johndoe@gmail.com',
+            password='JohnDoe@!3'
+        )
+        self.other_user = User.objects.create_user(
+            username='AliceSmith21',
+            email='alicesmith21@gmail.com',
+            password='Alice123$!'
+        )
+        self.quiz = Quiz.objects.create(
+            name="Python Basics",
+            description="Test your knowledge of Python basics.",
+            category="programming",
+            is_public=True,
+            created_by=self.user
+        )
+
+    def get_access_token(self, user):
+        """Helper function to get JWT token for the test user"""
+        refresh = RefreshToken.for_user(user)
+        return str(refresh.access_token)
+
+    @pytest.mark.django_db
+    def test_delete_quiz_success(self):
+        """Test successful soft delete of a quiz"""
+
+        # Arrange
+        token = self.get_access_token(self.user)
+
+        # Act
+        response = self.client.delete(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json()['message'] == 'Quiz deleted successfully.'
+        self.quiz.refresh_from_db()
+        assert self.quiz.is_removed is True
+
+    @pytest.mark.django_db
+    def test_delete_quiz_non_author(self):
+        """Test that a non-author cannot delete a quiz"""
+
+        # Arrange
+        token = self.get_access_token(self.other_user)
+
+        # Act
+        response = self.client.delete(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['message'] == 'No quiz with this ID was found for this user.'
+        self.quiz.refresh_from_db()
+        assert self.quiz.is_removed is False
+
+    @pytest.mark.django_db
+    def test_delete_quiz_non_existent(self):
+        """Test deleting a quiz that does not exist"""
+
+        # Arrange
+        token = self.get_access_token(self.user)
+
+        # Act
+        response = self.client.delete('/999', headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['message'] == 'No quiz with this ID was found for this user.'
+
+    @pytest.mark.django_db
+    def test_delete_quiz_without_authentication(self):
+        """Test deleting a quiz without authentication token"""
+
+        # Act
+        response = self.client.delete(f'/{self.quiz.id}')
+
+        # Assert
+        assert response.status_code == 401
+        assert response.json()['detail'] == 'Unauthorized'
+
+    @pytest.mark.django_db
+    def test_delete_already_deleted_quiz(self):
+        """Test that a soft-deleted quiz cannot be deleted again"""
+
+        # Arrange
+        token = self.get_access_token(self.user)
+        self.quiz.is_removed = True
+        self.quiz.save()
+
+        # Act
+        response = self.client.delete(f'/{self.quiz.id}', headers={'Authorization': f'Bearer {token}'})
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['message'] == 'No quiz with this ID was found for this user.'
+
+
 class TestSubmitQuizEndpoint(TestCase):
     def setUp(self):
         self.client = TestClient(router)
