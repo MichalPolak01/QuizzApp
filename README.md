@@ -1,12 +1,6 @@
-# ***Testowanie i jakość oprogramowania***
+## Temat projektu: **Implementacja testów w aplikacji internetowej z quizami**
 
 ## Wykonanie: **Michał Polak**
-
-## Prezentacja projektu
-
-https://youtu.be/uFr5na8JSPA
-
-## Temat projektu: **Implementacja testów w aplikacji internetowej z quizami**
 
 ## Opis projektu:
 
