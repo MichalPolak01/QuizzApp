@@ -10,8 +10,8 @@ import ChangePassword from "@/components/change-password";
 export default function Page() {
     const [selected, setSelected] = useState("account-settings");
 
-    const handleSelectionChange = (key: Key) => {
-      setSelected(key as string);
+    const handleSelectionChange = (key: Key | null) => {
+      if (key !== null) setSelected(key as string);
   };
   
     return (

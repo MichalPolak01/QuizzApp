@@ -8,11 +8,9 @@ WORKDIR /app
 
 FROM base AS dependencies
 
-COPY package.json ./
+COPY package.json package-lock.json* ./
 
 RUN npm install --force
-
-RUN npm ci --only=production --force
 
 FROM base AS build
 
